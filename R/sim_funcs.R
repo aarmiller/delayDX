@@ -96,6 +96,10 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
   ## Compute summary statistics across all patients ###
   miss_summary <- sim_miss_num %>%
     dplyr::summarise(n_pat = n(),                          # number of patients missed
+                     n_vis = sum(n_vis),
+                     n_vis_out = sum(n_vis_out),
+                     n_vis_ed = sum(n_vis_ed),
+                     n_vis_inpatient = sum(n_vis_inpatient),
                      mean_n_vis = mean(n_vis),             # mean number of misses per patient
                      median_n_vis =median(n_vis),          # median number of misses per patient
                      mean_n_vis_out = mean(n_vis_out),     # mean number of ed misses per patient
@@ -243,6 +247,10 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
   ## Compute summary statistics across all patients ###
   miss_summary <- sim_miss_num %>%
     dplyr::summarise(n_pat = n(),                  # number of patients missed
+                     n_vis = sum(n_vis),
+                     n_vis_out = sum(n_vis_out),
+                     n_vis_ed = sum(n_vis_ed),
+                     n_vis_inpatient = sum(n_vis_inpatient),
                      n_miss_visit = sum(n_vis),    # total number of missed opportunities
                      mean_n_vis = mean(n_vis),     # mean number of misses per patient
                      median_n_vis =median(n_vis),  # median number of misses per patient
