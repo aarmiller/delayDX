@@ -1,0 +1,26 @@
+Package: delayDX
+Type: Package
+Title: Tasks for findind and estimating diagnostic delays
+Version: 0.1.3.9999
+Author: Who wrote it
+Maintainer: Aaron Miller <aaron-miller@uiowa.edu>
+Description: Tasks for findind and estimating diagnostic delays.
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
+Imports: 
+    tibble,
+    dplyr,
+    glue,
+    checkmate,
+    magrittr,
+    stringr,
+    tidyr,
+    purrr,
+    rlang,
+    broom,
+    ggplot2,
+    modelr,
+    multidplyr
