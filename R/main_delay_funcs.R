@@ -94,11 +94,11 @@ find_change_point <- function(data,var_name,method="lm",eval_criteria="AIC", ret
       tidyr::unnest(res)
   }
 
-  eval_func <- ifelse(eval_criteria %in% c("r.squared","adj.r.squared"),"max","min")
-
-  change_t <- fits %>%
-    dplyr::filter_(paste0(eval_criteria,"==",eval_func,"(",eval_criteria,")")) %>%
-    .$cp
+  if (eval_criteria %in% c("r.squared","adj.r.squared")){
+    change_t <- fits$cp[fits[eval_criteria]==max(fits[eval_criteria])]
+  } else {
+    change_t <- fits$cp[fits[eval_criteria]==min(fits[eval_criteria])]
+  }
 
   if (method=="spline"){
     out <- fit_cp_spline(data = data, x=change_t,return_all = TRUE)
