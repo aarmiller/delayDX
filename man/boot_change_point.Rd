@@ -14,7 +14,7 @@ This dataset should be created using the `prep_sim_data()` function}
 
 \item{sim_version}{the simulation version to run. Options include "visits" (default) or "patients".}
 
-\item{n_sim_trials}{number of trails to run in simulation of miss visits or miss patients}
+\item{n_sim_trials}{number of trials to run in simulation of miss visits or miss patients}
 
 \item{new_draw_weight}{a weighing parameter used to assign preference to drawing previously "missed" patients
 at each time step. A value of 0 applies strict preference to drawing patients who

@@ -5,7 +5,7 @@
 \title{Run multiple bootstrapped change_point simulations (in parallel)}
 \usage{
 run_cp_bootstrap(sim_data, sim_version = "visits", boot_trials = 100,
-  n_visit_trials = 50, new_draw_weight = 0, num_cores = NULL,
+  n_sim_trials = 50, new_draw_weight = 0, num_cores = NULL,
   sim_duartion_for_regression = FALSE)
 }
 \arguments{
@@ -16,6 +16,8 @@ This dataset should be created using the `prep_sim_data()` function}
 
 \item{boot_trials}{number of bootstrapped trials to run (default is 100)}
 
+\item{n_sim_trials}{number of trials to run in simulation of miss visits (default is 50)}
+
 \item{new_draw_weight}{a weighing parameter used to assign preference to drawing previously "missed" patients
 at each time step. A value of 0 applies strict preference to drawing patients who
 have been assigned to miss in prior time steps, while a value 0.5 applies equal weight
@@ -23,8 +25,6 @@ to patients who have and have not been previously selected.}
 
 \item{num_cores}{The number of worker cores to use. If not specified will detect cores and use
 1 less than the number of cores}
-
-\item{n_sim_trials}{number of trails to run in simulation of miss visits (default is 50)}
 }
 \description{
 Run multiple bootstrapped change_point simulations (in parallel)
