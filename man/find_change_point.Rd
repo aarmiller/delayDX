@@ -4,8 +4,13 @@
 \alias{find_change_point}
 \title{Find the change point in count data}
 \usage{
-find_change_point(data, var_name, method = "lm", eval_criteria = "AIC",
-  return_miss_only = FALSE)
+find_change_point(
+  data,
+  var_name,
+  method = "lm",
+  eval_criteria = "AIC",
+  return_miss_only = FALSE
+)
 }
 \arguments{
 \item{data}{A dataset of visit counts}

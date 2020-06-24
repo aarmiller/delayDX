@@ -4,9 +4,15 @@
 \alias{run_cp_bootstrap}
 \title{Run multiple bootstrapped change_point simulations (in parallel)}
 \usage{
-run_cp_bootstrap(sim_data, sim_version = "visits", boot_trials = 100,
-  n_sim_trials = 50, new_draw_weight = 0, num_cores = NULL,
-  sim_duartion_for_regression = FALSE)
+run_cp_bootstrap(
+  sim_data,
+  sim_version = "visits",
+  boot_trials = 100,
+  n_sim_trials = 50,
+  new_draw_weight = 0,
+  num_cores = NULL,
+  sim_duartion_for_regression = FALSE
+)
 }
 \arguments{
 \item{sim_data}{a dataset containing the time_map, miss bins and other parameters used for the simulation.
