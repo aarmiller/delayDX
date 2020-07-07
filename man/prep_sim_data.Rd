@@ -4,8 +4,13 @@
 \alias{prep_sim_data}
 \title{Prepare data for simulation}
 \usage{
-prep_sim_data(time_map_data, by_days = 1, start_day = 1,
-  event_name = "any_ssd", cp_method = "lm_quad")
+prep_sim_data(
+  time_map_data,
+  by_days = 1,
+  start_day = 1,
+  event_name = "any_ssd",
+  cp_method = "lm_quad"
+)
 }
 \arguments{
 \item{time_map_data}{a time_map of visits}

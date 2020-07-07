@@ -4,8 +4,7 @@
 \alias{run_sim_miss_visits}
 \title{Run multiple simulations of missed visits}
 \usage{
-run_sim_miss_visits(sim_data, trials = 50,
-  sim_duartion_for_regression = FALSE)
+run_sim_miss_visits(sim_data, trials = 50, sim_duartion_for_regression = FALSE)
 }
 \arguments{
 \item{sim_data}{a dataset containing the time_map, miss bins and other parameters used for the simulation.

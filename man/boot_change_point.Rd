@@ -4,9 +4,13 @@
 \alias{boot_change_point}
 \title{Bootstrap Estimation of Changepoint and simulated miss visits}
 \usage{
-boot_change_point(sim_data, sim_version = "visits",
-  n_sim_trials = 100L, new_draw_weight = 0,
-  sim_duartion_for_regression = FALSE)
+boot_change_point(
+  sim_data,
+  sim_version = "visits",
+  n_sim_trials = 100L,
+  new_draw_weight = 0,
+  sim_duartion_for_regression = FALSE
+)
 }
 \arguments{
 \item{sim_data}{a dataset containing the time_map, miss bins and other parameters used for the simulation.

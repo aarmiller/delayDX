@@ -4,8 +4,12 @@
 \alias{count_prior_events_truven}
 \title{Count prior visits assocatied with a given condition}
 \usage{
-count_prior_events_truven(time_map_data, event_name, start_day = 1L,
-  by_days = 1L)
+count_prior_events_truven(
+  time_map_data,
+  event_name,
+  start_day = 1L,
+  by_days = 1L
+)
 }
 \arguments{
 \item{time_map_data}{A timemap with indicators for specific events (i.e.
