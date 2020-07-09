@@ -9,7 +9,9 @@ boot_change_point(
   sim_version = "visits",
   n_sim_trials = 100L,
   new_draw_weight = 0,
-  sim_duartion_for_regression = FALSE
+  sim_duartion_for_regression = FALSE,
+  eval_criteria = "AIC",
+  week_period = FALSE
 )
 }
 \arguments{
