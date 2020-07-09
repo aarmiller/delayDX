@@ -9,7 +9,9 @@ prep_sim_data(
   by_days = 1,
   start_day = 1,
   event_name = "any_ssd",
-  cp_method = "lm_quad"
+  cp_method = "lm_quad",
+  eval_criteria = "AIC",
+  week_period = FALSE
 )
 }
 \arguments{
@@ -22,6 +24,12 @@ prep_sim_data(
 \item{event_name}{The variable name for the event indicator}
 
 \item{cp_method}{The change-point method to fit visit counts}
+
+\item{eval_criteria}{The evaluation criteria used to find change points, if using a
+linear regression method}
+
+\item{week_period}{Logical to incorporate a "day of the week" effect into the linear model, if
+method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation}
 }
 \description{
 Prepare data for simulation

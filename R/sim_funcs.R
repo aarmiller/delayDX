@@ -5,9 +5,14 @@
 #' @param start_day When to start counting prior to the index
 #' @param event_name The variable name for the event indicator
 #' @param cp_method The change-point method to fit visit counts
+#' @param eval_criteria The evaluation criteria used to find change points, if using a
+#' linear regression method
+#' @param week_period Logical to incorporate a "day of the week" effect into the linear model, if
+#' method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation
 #' @export
 #'
-prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_ssd",cp_method = "lm_quad"){
+prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_ssd",cp_method = "lm_quad",
+                          eval_criteria="AIC", week_period=FALSE){
 
   sim_time_map <- time_map_data %>%
     dplyr::mutate(period = ((-days_since_dx - start_day)%/%by_days),  # create period based on time shifts
@@ -23,14 +28,18 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_
                                    by_days = 1)
 
   miss_bins_visits <- tmp %>%
-    find_change_point(var_name = n_miss_visits,           # NOTE: need to edit for other counts
+    find_change_point(var_name = "n_miss_visits",           # NOTE: need to edit for other counts
                       method = cp_method,
-                      return_miss_only = TRUE)
+                      return_miss_only = TRUE,
+                      eval_criteria = eval_criteria,
+                      week_period = week_period)
 
   miss_bins_patients <- tmp %>%
-    find_change_point(var_name = n_miss_patients,           # NOTE: need to edit for other counts
+    find_change_point(var_name = "n_miss_patients",           # NOTE: need to edit for other counts
                       method = cp_method,
-                      return_miss_only = TRUE)
+                      return_miss_only = TRUE,
+                      eval_criteria = eval_criteria,
+                      week_period = week_period)
 
   # number of patients to simulate
   n_pat <- time_map_data %>%
@@ -43,7 +52,9 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_
               total_patients=n_pat,
               cp_method=cp_method,
               event_name=event_name,
-              start_day=start_day))
+              start_day=start_day,
+              eval_criteria=eval_criteria,
+              week_period=week_period))
 
 }
 
@@ -304,7 +315,8 @@ run_sim_miss_patients <- function (sim_data, trials = 50,new_draw_weight=0.0) {
 #' @export
 #'
 boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 100L,
-                               new_draw_weight=0.0,sim_duartion_for_regression = FALSE) {
+                               new_draw_weight=0.0,sim_duartion_for_regression = FALSE,
+                               eval_criteria="AIC", week_period=FALSE) {
 
   # draw bootstrapped samples
   draw_time_map <- sim_data$time_map %>%
@@ -323,8 +335,10 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
 
   if (sim_version=="visits"){
     sim_cp <- sim_cp %>%
-      find_change_point(var_name = n_miss_visits,
-                        method = sim_data$cp_method)
+      find_change_point(var_name = "n_miss_visits",
+                        method = sim_data$cp_method,
+                        eval_criteria = sim_data$eval_criteria,
+                        week_period = sim_data$week_period)
 
     # pull out the miss bins
     miss_bins <- sim_cp$miss_bins
@@ -345,8 +359,10 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
 
   } else {
     sim_cp <- sim_cp %>%
-      find_change_point(var_name = n_miss_patients,
-                        method = sim_data$cp_method)
+      find_change_point(var_name = "n_miss_patients",
+                        method = sim_data$cp_method,
+                        eval_criteria = sim_data$eval_criteria,
+                        week_period = sim_data$week_period)
 
     # pull out the miss bins
     miss_bins <- sim_cp$miss_bins
