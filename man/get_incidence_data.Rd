@@ -22,5 +22,6 @@ A dataframe containing the outcome "miss" and covariates for each row
 Prepare a time map for incidence modeling
 }
 \examples{
-get_incidence_data(time_map=final_time_map, , change_point=-90, days_before= -1)
+get_incidence_data(time_map=final_time_map, demo_data=demographics, change_point=-90, days_before= -1)
+
 }

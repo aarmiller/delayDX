@@ -24,7 +24,9 @@
 #' @param days_before Number of days before index to start classifying as a miss
 #' @return A dataframe containing the outcome "miss" and covariates for each row
 #' @examples
-#' get_incidence_data(time_map=final_time_map, , change_point=-90, days_before= -1)
+#' get_incidence_data(time_map=final_time_map, demo_data=demographics, change_point=-90, days_before= -1)
+#'
+#' @export
 get_incidence_data <- function(time_map, demo_data, change_point, days_before = -1){
 
   #Require certain packages
