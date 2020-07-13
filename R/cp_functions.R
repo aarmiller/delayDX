@@ -384,6 +384,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
 
 
 #' Find the change point in count data. This is a backwards-compatible wrapper function to
+#' find the changepoint, which calls other methods.
 #'
 #' @param data A dataset of visit counts, output by count_prior_events_truven
 #' @param var_name The name of the count variable to find the change-point for

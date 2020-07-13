@@ -4,12 +4,12 @@
 \alias{get_incidence_data}
 \title{Prepare a time map for incidence modeling}
 \usage{
-get_incidence_data(time_map, db_con, change_point, days_before = -1)
+get_incidence_data(time_map, demo_data, change_point, days_before = -1)
 }
 \arguments{
 \item{time_map}{A time map in the format of the package example}
 
-\item{db_con}{A connection to a small, condition-specific database}
+\item{demo_data}{A dataframe of demographic data for the enrollees}
 
 \item{change_point}{The changepoint on which to base the dataset (must be <=-1)}
 
@@ -22,5 +22,5 @@ A dataframe containing the outcome "miss" and covariates for each row
 Prepare a time map for incidence modeling
 }
 \examples{
-get_incidence_data(time_map, db_con, change_point=-90, days_before= -1)
+get_incidence_data(time_map=final_time_map, , change_point=-90, days_before= -1)
 }

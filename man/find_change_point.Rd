@@ -2,7 +2,8 @@
 % Please edit documentation in R/cp_functions.R
 \name{find_change_point}
 \alias{find_change_point}
-\title{Find the change point in count data. This is a backwards-compatible wrapper function to}
+\title{Find the change point in count data. This is a backwards-compatible wrapper function to
+find the changepoint, which calls other methods.}
 \usage{
 find_change_point(
   data,
@@ -35,6 +36,7 @@ depending on the method used, but all contain miss predictions and a plot
 }
 \description{
 Find the change point in count data. This is a backwards-compatible wrapper function to
+find the changepoint, which calls other methods.
 }
 \examples{
 
