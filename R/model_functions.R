@@ -95,13 +95,13 @@ get_incidence_data <- function(time_map, demo_data, change_point, days_before = 
 
   final_model_data <- final_model_data %>%
     mutate(visit_type = as.character(.01*outpatient + .1*inpatient + ED)) %>%
-    mutate(visit_type = ifelse(as.numeric(visit_type)==0.01,"Outpatient Only",visit_type)) %>%
-    mutate(visit_type = ifelse(as.numeric(visit_type)==0.1,"Inpatient Only",visit_type)) %>%
-    mutate(visit_type = ifelse(as.numeric(visit_type)==1,"ED Only",visit_type)) %>%
-    mutate(visit_type = ifelse(as.numeric(visit_type)==1.01,"ED and Outpatient Only",visit_type)) %>%
-    mutate(visit_type = ifelse(as.numeric(visit_type)==1.1,"ED and Inpatient Only",visit_type)) %>%
-    mutate(visit_type = ifelse(as.numeric(visit_type)==0.11,"Outpatient and Inpatient Only",visit_type)) %>%
-    mutate(visit_type = ifelse(as.numeric(visit_type)==1.11,"Outpatient, ED, and Inpatient",visit_type))
+    mutate(visit_type = ifelse(visit_type=="0.01","Outpatient Only",visit_type)) %>%
+    mutate(visit_type = ifelse(visit_type=="0.1","Inpatient Only",visit_type)) %>%
+    mutate(visit_type = ifelse(visit_type=="1","ED Only",visit_type)) %>%
+    mutate(visit_type = ifelse(visit_type=="1.01","ED and Outpatient Only",visit_type)) %>%
+    mutate(visit_type = ifelse(visit_type=="1.1","ED and Inpatient Only",visit_type)) %>%
+    mutate(visit_type = ifelse(visit_type=="0.11","Outpatient and Inpatient Only",visit_type)) %>%
+    mutate(visit_type = ifelse(visit_type=="1.11","Outpatient, ED, and Inpatient",visit_type))
   #Put in factor form
   final_model_data$visit_type <- factor(final_model_data$visit_type,
                                         levels=c("Outpatient Only", "Inpatient Only", "ED Only",
