@@ -7,17 +7,21 @@
 #' @param cp_method The change-point method to fit visit counts
 #' @param eval_criteria The evaluation criteria used to find change points, if using a
 #' linear regression method
+#' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
+#' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
 #' @param week_period Logical to incorporate a "day of the week" effect into the linear model, if
 #' method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation
 #' @export
 #'
-prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_ssd",cp_method = "lm_quad",
+prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_ssd", cp_method = "lm_quad", specify_cp = NULL,
                           eval_criteria="AIC", week_period=FALSE){
 
   sim_time_map <- time_map_data %>%
     dplyr::mutate(period = ((-days_since_dx - start_day)%/%by_days),  # create period based on time shifts
                   old_days_since_dx=days_since_dx,                    # store old days_since_dx for desting (DELETE LATER)
-                  days_since_dx=-period-1) %>%                        # update days_since_dx for proper shifting
+                  days_since_dx=-period) %>%                        # If we subtract 1 from period we need to make sure to subract the mean duration missed from the simulations by 1. 
+    # Or you can specify that start_day = 0L (instead of 1L) in count_prior_events_truven below and in boot_change_point. 
+    # This way you don't have to adjust the mean duration missed from the simulations.
     dplyr::mutate(enrolid_new=enrolid) %>%
     dplyr::select(enrolid,enrolid_new,period,days_since_dx,miss_ind=!!event_name,old_days_since_dx,inpatient,ed) %>%
     filter(period>=0)
@@ -25,6 +29,7 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_
   # Compute preliminary miss bins for simulation
   tmp <- count_prior_events_truven(sim_time_map,
                                    event_name = "miss_ind",
+                                   start_day = 0L, # to account for adjusted days_since_dx value
                                    by_days = 1)
 
   miss_bins_visits <- tmp %>%
@@ -32,14 +37,16 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_
                       method = cp_method,
                       return_miss_only = TRUE,
                       eval_criteria = eval_criteria,
-                      week_period = week_period)
+                      week_period = week_period,
+                      specify_cp = specify_cp)
 
   miss_bins_patients <- tmp %>%
     find_change_point(var_name = "n_miss_patients",           # NOTE: need to edit for other counts
                       method = cp_method,
                       return_miss_only = TRUE,
                       eval_criteria = eval_criteria,
-                      week_period = week_period)
+                      week_period = week_period,
+                      specify_cp = specify_cp)
 
   # number of patients to simulate
   n_pat <- time_map_data %>%
@@ -54,7 +61,8 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_
               event_name=event_name,
               start_day=start_day,
               eval_criteria=eval_criteria,
-              week_period=week_period))
+              week_period=week_period,
+              specify_cp = specify_cp))
 
 }
 
@@ -316,74 +324,132 @@ run_sim_miss_patients <- function (sim_data, trials = 50,new_draw_weight=0.0) {
 #'
 boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 100L,
                                new_draw_weight=0.0,sim_duartion_for_regression = FALSE,
-                               eval_criteria="AIC", week_period=FALSE) {
-
-  # draw bootstrapped samples
-  draw_time_map <- sim_data$time_map %>%
-    dplyr::distinct(enrolid) %>%
-    dplyr::sample_frac(1, replace = TRUE) %>%                 # sample enrolids with replacement
-    dplyr::mutate(enrolid_new = row_number()) %>%             # generate new unique enrolids
-    dplyr::inner_join(select(sim_data$time_map,-enrolid_new), # remove old enrolid_new
-                      by = "enrolid") %>%                     # merge back into time map
-    dplyr::mutate(enrolid_old=enrolid,                        # old enrolid for tracking
-                  enrolid=enrolid_new)                        # change to new enrolid  (NOTE NEEDS TO OCCUR TO COUNT PATIENTS CORRECTLY)
-
+                               eval_criteria="AIC", week_period=FALSE,
+                               no_bootstrapping = FALSE) {
+  if (no_bootstrapping == FALSE){
+    # draw bootstrapped samples
+    draw_time_map <- sim_data$time_map %>%
+      dplyr::distinct(enrolid) %>%
+      dplyr::sample_frac(1, replace = TRUE) %>%                 # sample enrolids with replacement
+      dplyr::mutate(enrolid_new = row_number()) %>%             # generate new unique enrolids
+      dplyr::inner_join(select(sim_data$time_map,-enrolid_new), # remove old enrolid_new
+                        by = "enrolid") %>%                     # merge back into time map
+      dplyr::mutate(enrolid_old=enrolid,                        # old enrolid for tracking
+                    enrolid=enrolid_new)                        # change to new enrolid  (NOTE NEEDS TO OCCUR TO COUNT PATIENTS CORRECTLY)
+  } else {
+    draw_time_map <- sim_data$time_map
+  }
   # simulation change-point data
   sim_cp <- count_prior_events_truven(draw_time_map,
                                       event_name = "miss_ind",   # note the count value has already been selected in the sim data
+                                      start_day = 0L,  # to account for adjusted days_since_dx value
                                       by_days = 1L)
 
-  if (sim_version=="visits"){
-    sim_cp <- sim_cp %>%
-      find_change_point(var_name = "n_miss_visits",
-                        method = sim_data$cp_method,
-                        eval_criteria = sim_data$eval_criteria,
-                        week_period = sim_data$week_period)
-
-    # pull out the miss bins
-    miss_bins <- sim_cp$miss_bins
-
-    # estimated number of missed visits and observed missed visits
-    miss_stats <- miss_bins %>%
-      dplyr::summarise(miss_visits_est = sum(num_miss),
-                       miss_visits_obs = sum(Y - pred1))
-
-    # update sim data
-    new_sim_data <- sim_data
-    new_sim_data$miss_bins_visits <- miss_bins
-
-    # run simulation
-    sim_res_patients <- run_sim_miss_visits(sim_data = new_sim_data,
-                                            trials = n_sim_trials,
-                                            sim_duartion_for_regression = FALSE)
-
-  } else {
-    sim_cp <- sim_cp %>%
-      find_change_point(var_name = "n_miss_patients",
-                        method = sim_data$cp_method,
-                        eval_criteria = sim_data$eval_criteria,
-                        week_period = sim_data$week_period)
-
-    # pull out the miss bins
-    miss_bins <- sim_cp$miss_bins
-
-    # estimated number of missed visits and observed missed visits
-    # note that this is area under the curve and for patients this does not tell us much
-    miss_stats <- miss_bins %>%
-      dplyr::summarise(miss_patients_est = sum(num_miss),
-                       miss_patients_obs = sum(Y - pred1))
-
-    # update sim data
-    new_sim_data <- sim_data
-    new_sim_data$miss_bins_patients <- miss_bins
-
-    # run simulation
-    sim_res_patients <- run_sim_miss_patients(sim_data = new_sim_data,
+  if (is.null(sim_data$specify_cp)){
+    if (sim_version=="visits"){
+      sim_cp <- sim_cp %>%
+        find_change_point(var_name = "n_miss_visits",
+                          method = sim_data$cp_method,
+                          eval_criteria = sim_data$eval_criteria,
+                          week_period = sim_data$week_period)
+  
+      # pull out the miss bins
+      miss_bins <- sim_cp$miss_bins
+  
+      # estimated number of missed visits and observed missed visits
+      miss_stats <- miss_bins %>%
+        dplyr::summarise(miss_visits_est = sum(num_miss),
+                         miss_visits_obs = sum(Y - pred1))
+  
+      # update sim data
+      new_sim_data <- sim_data
+      new_sim_data$miss_bins_visits <- miss_bins
+  
+      # run simulation
+      sim_res_patients <- run_sim_miss_visits(sim_data = new_sim_data,
                                               trials = n_sim_trials,
-                                              new_draw_weight = new_draw_weight)
-
+                                              sim_duartion_for_regression = FALSE)
+  
+    } else {
+      sim_cp <- sim_cp %>%
+        find_change_point(var_name = "n_miss_patients",
+                          method = sim_data$cp_method,
+                          eval_criteria = sim_data$eval_criteria,
+                          week_period = sim_data$week_period)
+  
+      # pull out the miss bins
+      miss_bins <- sim_cp$miss_bins
+  
+      # estimated number of missed visits and observed missed visits
+      # note that this is area under the curve and for patients this does not tell us much
+      miss_stats <- miss_bins %>%
+        dplyr::summarise(miss_patients_est = sum(num_miss),
+                         miss_patients_obs = sum(Y - pred1))
+  
+      # update sim data
+      new_sim_data <- sim_data
+      new_sim_data$miss_bins_patients <- miss_bins
+  
+      # run simulation
+      sim_res_patients <- run_sim_miss_patients(sim_data = new_sim_data,
+                                                trials = n_sim_trials,
+                                                new_draw_weight = new_draw_weight)
+  
+    }
+  } else {
+    if (sim_version=="visits"){
+      sim_cp <- sim_cp %>%
+        find_change_point(var_name = "n_miss_visits",
+                          method = sim_data$cp_method,
+                          eval_criteria = sim_data$eval_criteria,
+                          week_period = sim_data$week_period,
+                          specify_cp = sim_data$specify_cp)
+      
+      # pull out the miss bins
+      miss_bins <- sim_cp$miss_bins
+      
+      # estimated number of missed visits and observed missed visits
+      miss_stats <- miss_bins %>%
+        dplyr::summarise(miss_visits_est = sum(num_miss),
+                         miss_visits_obs = sum(Y - pred1))
+      
+      # update sim data
+      new_sim_data <- sim_data
+      new_sim_data$miss_bins_visits <- miss_bins
+      
+      # run simulation
+      sim_res_patients <- run_sim_miss_visits(sim_data = new_sim_data,
+                                              trials = n_sim_trials,
+                                              sim_duartion_for_regression = FALSE)
+      
+    } else {
+      sim_cp <- sim_cp %>%
+        find_change_point(var_name = "n_miss_patients",
+                          method = sim_data$cp_method,
+                          eval_criteria = sim_data$eval_criteria,
+                          week_period = sim_data$week_period,
+                          specify_cp = sim_data$specify_cp)
+      
+      # pull out the miss bins
+      miss_bins <- sim_cp$miss_bins
+      
+      # estimated number of missed visits and observed missed visits
+      # note that this is area under the curve and for patients this does not tell us much
+      miss_stats <- miss_bins %>%
+        dplyr::summarise(miss_patients_est = sum(num_miss),
+                         miss_patients_obs = sum(Y - pred1))
+      
+      # update sim data
+      new_sim_data <- sim_data
+      new_sim_data$miss_bins_patients <- miss_bins
+      
+      # run simulation
+      sim_res_patients <- run_sim_miss_patients(sim_data = new_sim_data,
+                                                trials = n_sim_trials,
+                                                new_draw_weight = new_draw_weight)
+      
+    }
   }
-
   # aggregate results
   results <- list(change_point = sim_cp$change_point,
                   pred = sim_cp$pred,
@@ -408,63 +474,112 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
 #' @export
 #'
 run_cp_bootstrap <-   function (sim_data, sim_version="visits", boot_trials = 100, n_sim_trials = 50,
-                                new_draw_weight = 0.0, num_cores = NULL,sim_duartion_for_regression = FALSE)   {
-
-  if (is.null(num_cores)) {
-    num_cores <- parallel::detectCores() - 1
-  }
-
-  cluster <- parallel::makeCluster(num_cores)
-
-  parallel::clusterCall(cluster, function() library(tidyverse))
-  parallel::clusterCall(cluster, function() library(delayDX))
-
+                                new_draw_weight = 0.0, num_cores = NULL,sim_duartion_for_regression = FALSE,
+                                no_bootstrapping = FALSE)   {
   simulation_data <- sim_data
+  
+  # Add an warning if you specify change point but require bootstrapping
+  if (!is.null(sim_data$specify_cp) & boot_trials != 0 &  no_bootstrapping == FALSE)
+    stop("If you specify a change point you must set 'no_boostrapping' to TRUE and 'boot_trials to 0'")
 
-  if (sim_version=="visits"){
-    tmp <- parallel::parLapply(cl = cluster,
-                               1:boot_trials,
-                               function(x){boot_change_point(sim_data = simulation_data,
-                                                             sim_version="visits",
-                                                             n_sim_trials = n_sim_trials,
-                                                             sim_duartion_for_regression = FALSE)})
+  # Add an warning if you specify no boostrapping but set boot_trials >0
+  if ( boot_trials > 0 & no_bootstrapping == TRUE)
+    stop("If you specify 'no_boostrapping' == TRUE, you have to set 'boot_trial' to 0")
+  
+  if (boot_trials>0 & no_bootstrapping == FALSE){
+    if (is.null(num_cores)) {
+      num_cores <- parallel::detectCores() - 1
+    }
+  
+    cluster <- parallel::makeCluster(num_cores)
+  
+    parallel::clusterCall(cluster, function() library(tidyverse))
+    parallel::clusterCall(cluster, function() library(delayDX))
+  
+    if (sim_version=="visits"){
+      tmp <- parallel::parLapply(cl = cluster,
+                                 1:boot_trials,
+                                 function(x){boot_change_point(sim_data = simulation_data,
+                                                               sim_version="visits",
+                                                               n_sim_trials = n_sim_trials,
+                                                               sim_duartion_for_regression = FALSE)})
+    } else {
+      tmp <- parallel::parLapply(cl = cluster,
+                                 1:boot_trials,
+                                 function(x){boot_change_point(sim_data = simulation_data,
+                                                               sim_version="patients",
+                                                               n_sim_trials = n_sim_trials,
+                                                               new_draw_weight = new_draw_weight,
+                                                               sim_duartion_for_regression = FALSE)})
+    }
+  
+    # pull out change points
+    change_point <- map2(tmp,1:boot_trials,~.x$change_point %>%
+                           mutate(boot_trial=.y)) %>%
+      bind_rows() %>%
+      select(boot_trial,dplyr::everything())
+  
+    # pull out miss visit counts
+    miss_counts <- map2(tmp,1:boot_trials,~.$miss_counts %>%
+                                mutate(boot_trial=.y)) %>%
+      bind_rows() %>%
+      select(boot_trial,dplyr::everything())
+  
+    # pull out predicted visits
+    preds <- map2(tmp,1:boot_trials,~.$pred %>%
+                    mutate(boot_trial=.y)) %>%
+      bind_rows() %>%
+      select(boot_trial,dplyr::everything())
+  
+    # pull out simulation results
+    sim_visit_results <- map2(tmp,1:boot_trials,~.$sim_visit_results %>%
+                                mutate(boot_trial=.y))  %>%
+      bind_rows() %>%
+      select(boot_trial,dplyr::everything())
+  
+    parallel::stopCluster(cluster)
+    gc()
   } else {
-    tmp <- parallel::parLapply(cl = cluster,
-                               1:boot_trials,
-                               function(x){boot_change_point(sim_data = simulation_data,
-                                                             sim_version="patients",
-                                                             n_sim_trials = n_sim_trials,
-                                                             new_draw_weight = new_draw_weight,
-                                                             sim_duartion_for_regression = FALSE)})
+    if (sim_version=="visits"){
+      tmp <- boot_change_point(sim_data = simulation_data,
+                               sim_version="visits",
+                               n_sim_trials = n_sim_trials,
+                               sim_duartion_for_regression = FALSE,
+                               no_bootstrapping = TRUE)
+    } else {
+      tmp <- boot_change_point(sim_data = simulation_data,
+                               sim_version="patients",
+                               n_sim_trials = n_sim_trials,
+                               new_draw_weight = new_draw_weight,
+                               sim_duartion_for_regression = FALSE,
+                               no_bootstrapping = TRUE)
+    }
+    
+    # pull out change points
+    change_point <- tmp$change_point %>%
+                           mutate(boot_trial=0) %>%
+      bind_rows() %>%
+      select(boot_trial,dplyr::everything())
+    
+    # pull out miss visit counts
+    miss_counts <- tmp$miss_counts %>%
+                          mutate(boot_trial=0) %>%
+      bind_rows() %>%
+      select(boot_trial,dplyr::everything())
+    
+    # pull out predicted visits
+    preds <- tmp$pred %>%
+                    mutate(boot_trial=0) %>%
+      bind_rows() %>%
+      select(boot_trial,dplyr::everything())
+    
+    # pull out simulation results
+    sim_visit_results <- tmp$sim_visit_results %>%
+                                mutate(boot_trial=0)  %>%
+      bind_rows() %>%
+      select(boot_trial,dplyr::everything())
+    
   }
-
-  # pull out change points
-  change_point <- map2(tmp,1:boot_trials,~.x$change_point %>%
-                         mutate(boot_trial=.y)) %>%
-    bind_rows() %>%
-    select(boot_trial,dplyr::everything())
-
-  # pull out miss visit counts
-  miss_counts <- map2(tmp,1:boot_trials,~.$miss_counts %>%
-                              mutate(boot_trial=.y)) %>%
-    bind_rows() %>%
-    select(boot_trial,dplyr::everything())
-
-  # pull out predicted visits
-  preds <- map2(tmp,1:boot_trials,~.$pred %>%
-                  mutate(boot_trial=.y)) %>%
-    bind_rows() %>%
-    select(boot_trial,dplyr::everything())
-
-  # pull out simulation results
-  sim_visit_results <- map2(tmp,1:boot_trials,~.$sim_visit_results %>%
-                              mutate(boot_trial=.y))  %>%
-    bind_rows() %>%
-    select(boot_trial,dplyr::everything())
-
-  parallel::stopCluster(cluster)
-  gc()
-
   return(list(change_point = change_point,
               miss_counts = miss_counts,
               preds = preds,
