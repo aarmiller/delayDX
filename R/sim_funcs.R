@@ -413,7 +413,7 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
                                                 trials = n_sim_trials,
                                                 new_draw_weight = new_draw_weight)
     }
-  }
+
   # aggregate results
   results <- list(change_point = sim_cp$change_point,
                   pred = sim_cp$pred,
