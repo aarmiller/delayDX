@@ -160,13 +160,34 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
 #' @param sim_data a dataset containing the time_map, miss bins and other parameters used for the simulation.
 #'                 This dataset should be created using the `prep_sim_data()` function
 #' @param trials number of simulationed trials to run (default is 50)
+#' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the original dataset
+#' @param num_cores The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores
 #' @export
 #'
-run_sim_miss_visits <- function (sim_data, trials = 50, sim_duartion_for_regression = FALSE) {
-  tibble::tibble(trial = 1:trials) %>%
-    dplyr::mutate(data = purrr::map(trial,
+run_sim_miss_visits <- function (sim_data, trials = 50, sim_duartion_for_regression = FALSE, no_bootstrapping = FALSE,
+                                 num_cores = NULL) {
+  if (no_bootstrapping == FALSE){
+    tmp <- tibble::tibble(trial = 1:trials) %>%
+      dplyr::mutate(data = purrr::map(trial,
                                     ~sim_miss_visits(sim_data = sim_data,
                                                       sim_duartion_for_regression = FALSE)))
+  } else {
+    if (is.null(num_cores)) {
+      num_cores <- parallel::detectCores() - 1
+    }
+
+    cluster <- parallel::makeCluster(num_cores)
+
+    parallel::clusterCall(cluster, function() library(tidyverse))
+    parallel::clusterCall(cluster, function() library(delayDX))
+
+    tmp <- parallel::parLapply(cl = cluster,
+                               1:trials,
+                               function(x){sim_miss_visits(sim_data = sim_data,
+                                                           sim_duartion_for_regression = FALSE)})
+  }
+  return(tmp)
+
 }
 
 #' Simulated missed patients from an estimated set of miss bins
@@ -301,13 +322,34 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
 #'                        have been assigned to miss in prior time steps, while a value 0.5 applies equal weight
 #'                        to patients who have and have not been previously selected.
 #' @param trials number of simulationed trials to run (default is 50)
+#' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the original dataset
+#' @param num_cores The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores
 #' @export
 #'
-run_sim_miss_patients <- function (sim_data, trials = 50,new_draw_weight=0.0) {
-  tibble::tibble(trial = 1:trials) %>%
+run_sim_miss_patients <- function (sim_data, trials = 50, new_draw_weight=0.0, no_bootstrapping = FALSE,
+                                   num_cores = NULL) {
+  if (no_bootstrapping == FALSE){
+    tmp <-  tibble::tibble(trial = 1:trials) %>%
     dplyr::mutate(data = purrr::map(trial,
                                     ~sim_miss_patients(sim_data = sim_data,
                                                        new_draw_weight = new_draw_weight)))
+
+  } else {
+    if (is.null(num_cores)) {
+      num_cores <- parallel::detectCores() - 1
+    }
+
+    cluster <- parallel::makeCluster(num_cores)
+
+    parallel::clusterCall(cluster, function() library(tidyverse))
+    parallel::clusterCall(cluster, function() library(delayDX))
+
+     tmp <- parallel::parLapply(cl = cluster,
+                                 1:trials,
+                                 function(x){sim_miss_patients(sim_data = sim_data,
+                                                               new_draw_weight = new_draw_weight)})
+  }
+  return(tmp)
 }
 
 #' Bootstrap Estimation of Changepoint and simulated miss visits
@@ -320,11 +362,13 @@ run_sim_miss_patients <- function (sim_data, trials = 50,new_draw_weight=0.0) {
 #'                        at each time step. A value of 0 applies strict preference to drawing patients who
 #'                        have been assigned to miss in prior time steps, while a value 0.5 applies equal weight
 #'                        to patients who have and have not been previously selected.
+#' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the original dataset
+#' @param num_cores The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores.
 #' @export
 #'
 boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 100L,
                                new_draw_weight=0.0,sim_duartion_for_regression = FALSE,
-                               eval_criteria="AIC", week_period=FALSE,
+                               eval_criteria="AIC", week_period=FALSE, num_cores = NULL,
                                no_bootstrapping = FALSE) {
   if (no_bootstrapping == FALSE){
     # draw bootstrapped samples
@@ -376,7 +420,9 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
       # run simulation
       sim_res_patients <- run_sim_miss_visits(sim_data = new_sim_data,
                                               trials = n_sim_trials,
-                                              sim_duartion_for_regression = FALSE)
+                                              sim_duartion_for_regression = sim_duartion_for_regression,
+                                              no_bootstrapping = no_bootstrapping,
+                                              num_cores = num_cores)
 
     } else {
       if (is.null(sim_data$specify_cp)){
@@ -411,7 +457,9 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
       # run simulation
       sim_res_patients <- run_sim_miss_patients(sim_data = new_sim_data,
                                                 trials = n_sim_trials,
-                                                new_draw_weight = new_draw_weight)
+                                                new_draw_weight = new_draw_weight,
+                                                no_bootstrapping = no_bootstrapping,
+                                                num_cores = num_cores)
     }
 
   # aggregate results
@@ -504,20 +552,23 @@ run_cp_bootstrap <-   function (sim_data, sim_version="visits", boot_trials = 10
 
     parallel::stopCluster(cluster)
     gc()
+
   } else {
     if (sim_version=="visits"){
       tmp <- boot_change_point(sim_data = simulation_data,
                                sim_version="visits",
                                n_sim_trials = n_sim_trials,
                                sim_duartion_for_regression = FALSE,
-                               no_bootstrapping = TRUE)
+                               no_bootstrapping = TRUE,
+                               num_cores = num_cores)
     } else {
       tmp <- boot_change_point(sim_data = simulation_data,
                                sim_version="patients",
                                n_sim_trials = n_sim_trials,
                                new_draw_weight = new_draw_weight,
                                sim_duartion_for_regression = FALSE,
-                               no_bootstrapping = TRUE)
+                               no_bootstrapping = TRUE,
+                               num_cores = num_cores)
     }
 
     # pull out change points

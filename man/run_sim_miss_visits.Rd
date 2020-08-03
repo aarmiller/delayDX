@@ -4,13 +4,23 @@
 \alias{run_sim_miss_visits}
 \title{Run multiple simulations of missed visits}
 \usage{
-run_sim_miss_visits(sim_data, trials = 50, sim_duartion_for_regression = FALSE)
+run_sim_miss_visits(
+  sim_data,
+  trials = 50,
+  sim_duartion_for_regression = FALSE,
+  no_bootstrapping = FALSE,
+  num_cores = NULL
+)
 }
 \arguments{
 \item{sim_data}{a dataset containing the time_map, miss bins and other parameters used for the simulation.
 This dataset should be created using the `prep_sim_data()` function}
 
 \item{trials}{number of simulationed trials to run (default is 50)}
+
+\item{no_bootstrapping}{Specifies whether you want to run the simulations without bootstrapping the original dataset}
+
+\item{num_cores}{The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores}
 }
 \description{
 Run multiple simulations of missed visits

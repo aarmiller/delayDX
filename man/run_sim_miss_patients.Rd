@@ -4,7 +4,13 @@
 \alias{run_sim_miss_patients}
 \title{Run multiple simulations of missed visits}
 \usage{
-run_sim_miss_patients(sim_data, trials = 50, new_draw_weight = 0)
+run_sim_miss_patients(
+  sim_data,
+  trials = 50,
+  new_draw_weight = 0,
+  no_bootstrapping = FALSE,
+  num_cores = NULL
+)
 }
 \arguments{
 \item{sim_data}{a dataset containing the time_map, miss bins and other parameters used for the simulation.
@@ -16,6 +22,10 @@ This dataset should be created using the `prep_sim_data()` function}
 at each time step. A value of 0 applies strict preference to drawing patients who
 have been assigned to miss in prior time steps, while a value 0.5 applies equal weight
 to patients who have and have not been previously selected.}
+
+\item{no_bootstrapping}{Specifies whether you want to run the simulations without bootstrapping the original dataset}
+
+\item{num_cores}{The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores}
 }
 \description{
 Run multiple simulations of missed visits
