@@ -10,6 +10,7 @@ prep_sim_data(
   start_day = 1,
   event_name = "any_ssd",
   cp_method = "lm_quad",
+  specify_cp = NULL,
   eval_criteria = "AIC",
   week_period = FALSE
 )
@@ -24,6 +25,9 @@ prep_sim_data(
 \item{event_name}{The variable name for the event indicator}
 
 \item{cp_method}{The change-point method to fit visit counts}
+
+\item{specify_cp}{Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
+repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)}
 
 \item{eval_criteria}{The evaluation criteria used to find change points, if using a
 linear regression method}

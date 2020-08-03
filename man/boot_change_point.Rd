@@ -11,7 +11,8 @@ boot_change_point(
   new_draw_weight = 0,
   sim_duartion_for_regression = FALSE,
   eval_criteria = "AIC",
-  week_period = FALSE
+  week_period = FALSE,
+  no_bootstrapping = FALSE
 )
 }
 \arguments{
