@@ -9,7 +9,8 @@ find_cp_linreg(
   var_name = "n_miss_visits",
   method = "lm",
   eval_criteria = "AIC",
-  return_miss_only = FALSE
+  return_miss_only = FALSE,
+  specify_cp = NULL
 )
 }
 \arguments{
@@ -23,6 +24,9 @@ find_cp_linreg(
 \item{eval_criteria}{The evaluation criteria used to find change points}
 
 \item{return_miss_only}{Logical argument to only return the tibbles of miss visit counts}
+
+\item{specify_cp}{Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
+repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)}
 }
 \description{
 Find the change point in count data using linear regression models

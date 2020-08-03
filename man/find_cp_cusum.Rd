@@ -9,7 +9,8 @@ find_cp_cusum(
   data,
   var_name = "n_miss_visits",
   return_miss_only = FALSE,
-  week_period = FALSE
+  week_period = FALSE,
+  specify_cp = NULL
 )
 }
 \arguments{
@@ -21,6 +22,9 @@ find_cp_cusum(
 
 \item{week_period}{Logical to incorporate a "day of the week" effect into
 the linear model. Note this is only sensible for one-day period aggregation.}
+
+\item{specify_cp}{Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
+repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)}
 }
 \value{
 A list containing miss information, changepoint information, predictions,
