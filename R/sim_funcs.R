@@ -345,14 +345,21 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
                                       start_day = 0L,  # to account for adjusted days_since_dx value
                                       by_days = 1L)
 
-  if (is.null(sim_data$specify_cp)){
-    if (sim_version=="visits"){
+  if (sim_version=="visits"){
+    if (is.null(sim_data$specify_cp)){
+      sim_cp <- sim_cp %>%
+        find_change_point(var_name = "n_miss_visits",
+                            method = sim_data$cp_method,
+                            eval_criteria = sim_data$eval_criteria,
+                            week_period = sim_data$week_period)
+    } else {
       sim_cp <- sim_cp %>%
         find_change_point(var_name = "n_miss_visits",
                           method = sim_data$cp_method,
                           eval_criteria = sim_data$eval_criteria,
-                          week_period = sim_data$week_period)
-
+                          week_period = sim_data$week_period,
+                          specify_cp = sim_data$specify_cp)
+    }
       # pull out the miss bins
       miss_bins <- sim_cp$miss_bins
 
@@ -363,6 +370,7 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
 
       # update sim data
       new_sim_data <- sim_data
+      new_sim_data$time_map <- draw_time_map
       new_sim_data$miss_bins_visits <- miss_bins
 
       # run simulation
@@ -371,11 +379,20 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
                                               sim_duartion_for_regression = FALSE)
 
     } else {
-      sim_cp <- sim_cp %>%
-        find_change_point(var_name = "n_miss_patients",
-                          method = sim_data$cp_method,
-                          eval_criteria = sim_data$eval_criteria,
-                          week_period = sim_data$week_period)
+      if (is.null(sim_data$specify_cp)){
+        sim_cp <- sim_cp %>%
+          find_change_point(var_name = "n_miss_patients",
+                            method = sim_data$cp_method,
+                            eval_criteria = sim_data$eval_criteria,
+                            week_period = sim_data$week_period)
+      } else {
+        sim_cp <- sim_cp %>%
+          find_change_point(var_name = "n_miss_patients",
+                            method = sim_data$cp_method,
+                            eval_criteria = sim_data$eval_criteria,
+                            week_period = sim_data$week_period,
+                            specify_cp = sim_data$specify_cp)
+      }
 
       # pull out the miss bins
       miss_bins <- sim_cp$miss_bins
@@ -388,68 +405,15 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
 
       # update sim data
       new_sim_data <- sim_data
+      new_sim_data$time_map <- draw_time_map
       new_sim_data$miss_bins_patients <- miss_bins
 
       # run simulation
       sim_res_patients <- run_sim_miss_patients(sim_data = new_sim_data,
                                                 trials = n_sim_trials,
                                                 new_draw_weight = new_draw_weight)
-
     }
-  } else {
-    if (sim_version=="visits"){
-      sim_cp <- sim_cp %>%
-        find_change_point(var_name = "n_miss_visits",
-                          method = sim_data$cp_method,
-                          eval_criteria = sim_data$eval_criteria,
-                          week_period = sim_data$week_period,
-                          specify_cp = sim_data$specify_cp)
 
-      # pull out the miss bins
-      miss_bins <- sim_cp$miss_bins
-
-      # estimated number of missed visits and observed missed visits
-      miss_stats <- miss_bins %>%
-        dplyr::summarise(miss_visits_est = sum(num_miss),
-                         miss_visits_obs = sum(Y - pred1))
-
-      # update sim data
-      new_sim_data <- sim_data
-      new_sim_data$miss_bins_visits <- miss_bins
-
-      # run simulation
-      sim_res_patients <- run_sim_miss_visits(sim_data = new_sim_data,
-                                              trials = n_sim_trials,
-                                              sim_duartion_for_regression = FALSE)
-
-    } else {
-      sim_cp <- sim_cp %>%
-        find_change_point(var_name = "n_miss_patients",
-                          method = sim_data$cp_method,
-                          eval_criteria = sim_data$eval_criteria,
-                          week_period = sim_data$week_period,
-                          specify_cp = sim_data$specify_cp)
-
-      # pull out the miss bins
-      miss_bins <- sim_cp$miss_bins
-
-      # estimated number of missed visits and observed missed visits
-      # note that this is area under the curve and for patients this does not tell us much
-      miss_stats <- miss_bins %>%
-        dplyr::summarise(miss_patients_est = sum(num_miss),
-                         miss_patients_obs = sum(Y - pred1))
-
-      # update sim data
-      new_sim_data <- sim_data
-      new_sim_data$miss_bins_patients <- miss_bins
-
-      # run simulation
-      sim_res_patients <- run_sim_miss_patients(sim_data = new_sim_data,
-                                                trials = n_sim_trials,
-                                                new_draw_weight = new_draw_weight)
-
-    }
-  }
   # aggregate results
   results <- list(change_point = sim_cp$change_point,
                   pred = sim_cp$pred,
