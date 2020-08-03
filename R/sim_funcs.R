@@ -469,9 +469,9 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
 #'                        to patients who have and have not been previously selected.
 #' @param boot_trials The number of bootstrapped trials to run (default is 100)
 #' @param n_sim_trials The number of trials to run in simulation of miss visits (default is 50)
-#' @param num_cores The number of worker cores to use. If not specified will detect cores and use
-#' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the orginal dataset
-#' 1 less than the number of cores
+#' @param num_cores The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores
+#' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the original dataset
+
 #' @export
 #'
 run_cp_bootstrap <-   function (sim_data, sim_version="visits", boot_trials = 100, n_sim_trials = 50,

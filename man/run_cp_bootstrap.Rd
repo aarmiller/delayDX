@@ -30,10 +30,9 @@ at each time step. A value of 0 applies strict preference to drawing patients wh
 have been assigned to miss in prior time steps, while a value 0.5 applies equal weight
 to patients who have and have not been previously selected.}
 
-\item{num_cores}{The number of worker cores to use. If not specified will detect cores and use}
+\item{num_cores}{The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores}
 
-\item{no_bootstrapping}{Specifies whether you want to run the simulations without bootstrapping the orginal dataset
-1 less than the number of cores}
+\item{no_bootstrapping}{Specifies whether you want to run the simulations without bootstrapping the original dataset}
 }
 \description{
 Run multiple bootstrapped change_point simulations (in parallel)
