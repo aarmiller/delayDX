@@ -12,6 +12,7 @@ boot_change_point(
   sim_duartion_for_regression = FALSE,
   eval_criteria = "AIC",
   week_period = FALSE,
+  num_cores = NULL,
   no_bootstrapping = FALSE
 )
 }
@@ -27,6 +28,10 @@ This dataset should be created using the `prep_sim_data()` function}
 at each time step. A value of 0 applies strict preference to drawing patients who
 have been assigned to miss in prior time steps, while a value 0.5 applies equal weight
 to patients who have and have not been previously selected.}
+
+\item{num_cores}{The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores.}
+
+\item{no_bootstrapping}{Specifies whether you want to run the simulations without bootstrapping the original dataset}
 }
 \description{
 Bootstrap Estimation of Changepoint and simulated miss visits
