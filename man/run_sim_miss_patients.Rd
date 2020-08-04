@@ -2,7 +2,7 @@
 % Please edit documentation in R/sim_funcs.R
 \name{run_sim_miss_patients}
 \alias{run_sim_miss_patients}
-\title{Run multiple simulations of missed visits}
+\title{Run multiple simulations of missed patients}
 \usage{
 run_sim_miss_patients(
   sim_data,
@@ -28,5 +28,5 @@ to patients who have and have not been previously selected.}
 \item{num_cores}{The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores}
 }
 \description{
-Run multiple simulations of missed visits
+Run multiple simulations of missed patients
 }
