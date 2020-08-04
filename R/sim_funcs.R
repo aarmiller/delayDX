@@ -172,6 +172,7 @@ run_sim_miss_visits <- function (sim_data, trials = 50, sim_duartion_for_regress
                                     ~sim_miss_visits(sim_data = sim_data,
                                                       sim_duartion_for_regression = FALSE)))
   } else {
+    simulation_data <- sim_data
     if (is.null(num_cores)) {
       num_cores <- parallel::detectCores() - 1
     }
@@ -181,13 +182,22 @@ run_sim_miss_visits <- function (sim_data, trials = 50, sim_duartion_for_regress
     parallel::clusterCall(cluster, function() library(tidyverse))
     parallel::clusterCall(cluster, function() library(delayDX))
 
-    tmp <- parallel::parLapply(cl = cluster,
+    test <- parallel::parLapply(cl = cluster,
                                1:trials,
-                               function(x){sim_miss_visits(sim_data = sim_data,
+                               function(x){sim_miss_visits(sim_data = simulation_data,
                                                            sim_duartion_for_regression = FALSE)})
+    parallel::stopCluster(cluster)
+    gc()
+
+    tmp <- tibble()
+    for (i in 1:length(test)){
+      tmp1 <- tibble(trial = i,
+                     data = test[i])
+      tmp <- bind_rows(tmp, tmp1)
+
+    }
   }
   return(tmp)
-
 }
 
 #' Simulated missed patients from an estimated set of miss bins
@@ -313,7 +323,7 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
 }
 
 
-#' Run multiple simulations of missed visits
+#' Run multiple simulations of missed patients
 #'
 #' @param sim_data a dataset containing the time_map, miss bins and other parameters used for the simulation.
 #'                 This dataset should be created using the `prep_sim_data()` function
@@ -335,6 +345,8 @@ run_sim_miss_patients <- function (sim_data, trials = 50, new_draw_weight=0.0, n
                                                        new_draw_weight = new_draw_weight)))
 
   } else {
+    simulation_data <- sim_data
+
     if (is.null(num_cores)) {
       num_cores <- parallel::detectCores() - 1
     }
@@ -344,10 +356,20 @@ run_sim_miss_patients <- function (sim_data, trials = 50, new_draw_weight=0.0, n
     parallel::clusterCall(cluster, function() library(tidyverse))
     parallel::clusterCall(cluster, function() library(delayDX))
 
-     tmp <- parallel::parLapply(cl = cluster,
+     test <- parallel::parLapply(cl = cluster,
                                  1:trials,
-                                 function(x){sim_miss_patients(sim_data = sim_data,
+                                 function(x){sim_miss_patients(sim_data = simulation_data,
                                                                new_draw_weight = new_draw_weight)})
+     parallel::stopCluster(cluster)
+     gc()
+
+    tmp <- tibble()
+    for (i in 1:length(test)){
+      tmp1 <- tibble(trial = i,
+                    data = test[i])
+      tmp <- bind_rows(tmp, tmp1)
+
+    }
   }
   return(tmp)
 }
