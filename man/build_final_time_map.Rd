@@ -2,7 +2,7 @@
 % Please edit documentation in R/build_final_time_map_function.R
 \name{build_final_time_map}
 \alias{build_final_time_map}
-\title{Build a time map containing visit specific information for a specific condition and cohort.}
+\title{Builds a time map containing visit specific information for a specific condition and cohort.}
 \usage{
 build_final_time_map(
   condition_short_name,
@@ -26,10 +26,11 @@ ICD 10 specific codes, with list elements labled as icd9_codes and icd10_codes.}
 A tibble with all the specified diagnosis codes and the corresponding visit key where the diagnosis codes appeared.
 }
 \description{
-Build a time map containing visit specific information for a specific condition and cohort.
+Builds a time map containing visit specific information for a specific condition and cohort.
 }
 \examples{
 ssds <- read_rds("/Shared/Statepi_Diagnosis/params/ssd_codes/ssd_hsv_enceph.RDS")
+
 final_time_map <- build_final_time_map(condition_short_name = "hsv_enceph", duration_prior_to_index = 365L,
 cohort_path = "/Shared/Statepi_Diagnosis/grant_projects/hsv_enceph/scripts/validation/enrolled_ge_365/updated_index_cohort.RDS",
 ssd_list = ssds)
