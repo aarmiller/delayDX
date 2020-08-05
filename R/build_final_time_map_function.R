@@ -1,18 +1,19 @@
 #' Builds a time map containing visit specific information for a specific condition and cohort.
 #' @name build_final_time_map
-#' @param condition_short_name The condition of interest, specifically the short_name version of the condition.
-#' @param duration_prior_to_index How far from the index should the time map extend back.
+#' @param condition_short_name The condition of interest. Specifically the short_name version of the condition.
+#' @param duration_prior_to_index How far from the index should the time map extend back (e.g. 90, 180, 365)
 #' @param cohort_path Path to the specific cohort for the condition of interest.
-#' @param ssd_list A list of specific diagnosis codes that are of interest. The diagnosis codes need to be seperated into
-#' diagnosis categories (e.g. cough, fever, ect.) and within the categories diagnosis codes should be seperated into ICD 9 and
+#' @param ssd_list A list of diagnosis codes of interest. The diagnosis codes need to be seperated into
+#' diagnosis categories (e.g. cough, fever, etc.). Additionally, within the categories, diagnosis codes should be seperated into ICD 9 and
 #' ICD 10 specific codes, with list elements labled as icd9_codes and icd10_codes.
 #' @return A tibble with all the specified diagnosis codes and the corresponding visit key where the diagnosis codes appeared.
 #' @examples
 #' ssds <- read_rds("/Shared/Statepi_Diagnosis/params/ssd_codes/ssd_hsv_enceph.RDS")
 #'
-#' final_time_map <- build_final_time_map(condition_short_name = "hsv_enceph", duration_prior_to_index = 365L,
-#' cohort_path = "/Shared/Statepi_Diagnosis/grant_projects/hsv_enceph/scripts/validation/enrolled_ge_365/updated_index_cohort.RDS",
-#' ssd_list = ssds)
+#' final_time_map <- build_final_time_map(condition_short_name = "hsv_enceph",
+#'                                        duration_prior_to_index = 365L,
+#'                                        cohort_path = "/Shared/Statepi_Diagnosis/grant_projects/hsv_enceph/scripts/validation/enrolled_ge_365/updated_index_cohort.RDS",
+#'                                        ssd_list = ssds)
 #' @export
 #'
 
