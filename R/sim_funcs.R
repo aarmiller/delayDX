@@ -503,7 +503,8 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
 #'                        to patients who have and have not been previously selected.
 #' @param boot_trials The number of bootstrapped trials to run (default is 100)
 #' @param n_sim_trials The number of trials to run in simulation of miss visits (default is 50)
-#' @param num_cores The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores
+#' @param num_cores The number of worker cores to use. If not specified will determined the number of cores based on the which ever
+#' is the smallest value between number of boot_trials or detected number of cores - 1.
 #' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the original dataset
 
 #' @export
@@ -522,8 +523,11 @@ run_cp_bootstrap <-   function (sim_data, sim_version="visits", boot_trials = 10
     stop("If you specify 'no_boostrapping' == TRUE, you have to set 'boot_trial' to 0")
 
   if (boot_trials>0 & no_bootstrapping == FALSE){
+    # set up clusters
     if (is.null(num_cores)) {
-      num_cores <- parallel::detectCores() - 1
+      num_cores <- min(boot_trials, parallel::detectCores() - 1)
+    } else {
+      num_cores <- num_cores
     }
 
     cluster <- parallel::makeCluster(num_cores)
