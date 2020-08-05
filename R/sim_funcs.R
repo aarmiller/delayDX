@@ -161,7 +161,8 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
 #'                 This dataset should be created using the `prep_sim_data()` function
 #' @param trials number of simulationed trials to run (default is 50)
 #' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the original dataset
-#' @param num_cores The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores
+#' @param num_cores The number of worker cores to use. If not specified will determined the number of cores based on the which ever
+#' is the smallest value between number of trials or detected number of cores - 1.
 #' @export
 #'
 run_sim_miss_visits <- function (sim_data, trials = 50, sim_duartion_for_regression = FALSE, no_bootstrapping = FALSE,
@@ -173,8 +174,11 @@ run_sim_miss_visits <- function (sim_data, trials = 50, sim_duartion_for_regress
                                                       sim_duartion_for_regression = FALSE)))
   } else {
     simulation_data <- sim_data
+
     if (is.null(num_cores)) {
-      num_cores <- parallel::detectCores() - 1
+      num_cores <- min(trials, parallel::detectCores() - 1)
+    } else {
+      num_cores <- num_cores
     }
 
     cluster <- parallel::makeCluster(num_cores)
@@ -333,7 +337,8 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
 #'                        to patients who have and have not been previously selected.
 #' @param trials number of simulationed trials to run (default is 50)
 #' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the original dataset
-#' @param num_cores The number of worker cores to use. If not specified will detect cores and use 1 less than the number of cores
+#' @param num_cores The number of worker cores to use. If not specified will determined the number of cores based on the which ever
+#' is the smallest value between number of trials or detected number of cores - 1.
 #' @export
 #'
 run_sim_miss_patients <- function (sim_data, trials = 50, new_draw_weight=0.0, no_bootstrapping = FALSE,
@@ -348,7 +353,9 @@ run_sim_miss_patients <- function (sim_data, trials = 50, new_draw_weight=0.0, n
     simulation_data <- sim_data
 
     if (is.null(num_cores)) {
-      num_cores <- parallel::detectCores() - 1
+      num_cores <- min(trials, parallel::detectCores() - 1)
+    } else {
+      num_cores <- num_cores
     }
 
     cluster <- parallel::makeCluster(num_cores)
@@ -506,17 +513,95 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
 #' @param num_cores The number of worker cores to use. If not specified will determined the number of cores based on the which ever
 #' is the smallest value between number of boot_trials or detected number of cores - 1.
 #' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the original dataset
-
+#' @examples
+#'
+#' ### Run simulations with bootstrapping and allow change point to vary with each bootstrap sample ###
+#'
+#' #load example final_time_map dataset
+#' load("/Shared/Statepi_Diagnosis/grant_projects/hsv_enceph/scripts/validation/enrolled_ge_365/report_data.RData")
+#'
+#' # rename ED column
+#' final_time_map <- final_time_map %>% rename(ed = ED)
+#'
+#' # run prep sim function
+#' tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
+#'                               week_period = TRUE)
+#'
+#' #run simulations on number of visits
+#' simulation_results <- run_cp_bootstrap(tmp_sim_data,
+#'                                        sim_version = "visits",
+#'                                        boot_trials = 500,
+#'                                        n_sim_trials = 50,
+#'                                        new_draw_weight = NULL,
+#'                                        num_cores = NULL,
+#'                                        sim_duartion_for_regression = FALSE,
+#'                                        no_bootstrapping = FALSE)
+#'
+#'
+#' ### Run simulations with bootstrapping and specify a change point applied to each bootstrap sample ###
+#'
+#' # set a change point
+#' cp <- 20L
+#'
+#' # run prep sim function
+#' tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
+#'                               week_period = TRUE, , specify_cp = cp)
+#'
+#' #run simulations on number of visits
+#' simulation_results <- run_cp_bootstrap(tmp_sim_data,
+#'                                        sim_version = "visits",
+#'                                        boot_trials = 500,
+#'                                        n_sim_trials = 50,
+#'                                        new_draw_weight = NULL,
+#'                                        num_cores = NULL,
+#'                                        sim_duartion_for_regression = FALSE,
+#'                                        no_bootstrapping = FALSE)
+#'
+#'
+#' ### Run simulations without bootstrapping and allow function to find optimal change point for inputted data ###
+#'
+#' # run prep sim function
+#' tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
+#'                               week_period = TRUE)
+#'
+#' #run simulations on number of visits
+#' simulation_results <- run_cp_bootstrap(tmp_sim_data,
+#'                                        sim_version = "visits",
+#'                                        boot_trials = 0,
+#'                                        n_sim_trials = 25000,
+#'                                        new_draw_weight = NULL,
+#'                                        num_cores = NULL,
+#'                                        sim_duartion_for_regression = FALSE,
+#'                                        no_bootstrapping = TRUE)
+#'
+#'
+#' ### Run simulations without bootstrapping and specify a change point instead of allowing function to find optimal change point ###
+#' ### to apply to the data ###
+#'
+#' # set a change point
+#' cp <- 20L
+#'
+#' # run prep sim function
+#' tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
+#'                               week_period = TRUE, , specify_cp = cp)
+#'
+#' #run simulations on number of visits
+#' simulation_results <- run_cp_bootstrap(tmp_sim_data,
+#'                                        sim_version = "visits",
+#'                                        boot_trials = 0,
+#'                                        n_sim_trials = 25000,
+#'                                        new_draw_weight = NULL,
+#'                                        num_cores = NULL,
+#'                                        sim_duartion_for_regression = FALSE,
+#'                                        no_bootstrapping = TRUE)
 #' @export
+#'
 #'
 run_cp_bootstrap <-   function (sim_data, sim_version="visits", boot_trials = 100, n_sim_trials = 50,
                                 new_draw_weight = 0.0, num_cores = NULL, sim_duartion_for_regression = FALSE,
                                 no_bootstrapping = FALSE)   {
   simulation_data <- sim_data
 
-  # Add an warning if you specify change point but require bootstrapping
-  if (!is.null(sim_data$specify_cp) & boot_trials != 0 &  no_bootstrapping == FALSE)
-    stop("If you specify a change point you must set 'no_boostrapping' to TRUE and 'boot_trials to 0'")
 
   # Add an warning if you specify no boostrapping but set boot_trials >0
   if ( boot_trials > 0 & no_bootstrapping == TRUE)

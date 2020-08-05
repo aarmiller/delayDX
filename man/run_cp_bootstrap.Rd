@@ -38,3 +38,85 @@ is the smallest value between number of boot_trials or detected number of cores 
 \description{
 Run multiple bootstrapped change_point simulations (in parallel)
 }
+\examples{
+
+### Run simulations with bootstrapping and allow change point to vary with each bootstrap sample ###
+
+#load example final_time_map dataset
+load("/Shared/Statepi_Diagnosis/grant_projects/hsv_enceph/scripts/validation/enrolled_ge_365/report_data.RData")
+
+# rename ED column
+final_time_map <- final_time_map \%>\% rename(ed = ED)
+
+# run prep sim function
+tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
+                              week_period = TRUE)
+
+#run simulations on number of visits
+simulation_results <- run_cp_bootstrap(tmp_sim_data,
+                                       sim_version = "visits",
+                                       boot_trials = 500,
+                                       n_sim_trials = 50,
+                                       new_draw_weight = NULL,
+                                       num_cores = NULL,
+                                       sim_duartion_for_regression = FALSE,
+                                       no_bootstrapping = FALSE)
+
+
+### Run simulations with bootstrapping and specify a change point applied to each bootstrap sample ###
+
+# set a change point
+cp <- 20L
+
+# run prep sim function
+tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
+                              week_period = TRUE, , specify_cp = cp)
+
+#run simulations on number of visits
+simulation_results <- run_cp_bootstrap(tmp_sim_data,
+                                       sim_version = "visits",
+                                       boot_trials = 500,
+                                       n_sim_trials = 50,
+                                       new_draw_weight = NULL,
+                                       num_cores = NULL,
+                                       sim_duartion_for_regression = FALSE,
+                                       no_bootstrapping = FALSE)
+
+
+### Run simulations without bootstrapping and allow function to find optimal change point for inputted data ###
+
+# run prep sim function
+tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
+                              week_period = TRUE)
+
+#run simulations on number of visits
+simulation_results <- run_cp_bootstrap(tmp_sim_data,
+                                       sim_version = "visits",
+                                       boot_trials = 0,
+                                       n_sim_trials = 25000,
+                                       new_draw_weight = NULL,
+                                       num_cores = NULL,
+                                       sim_duartion_for_regression = FALSE,
+                                       no_bootstrapping = TRUE)
+
+
+### Run simulations without bootstrapping and specify a change point instead of allowing function to find optimal change point ###
+### to apply to the data ###
+
+# set a change point
+cp <- 20L
+
+# run prep sim function
+tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
+                              week_period = TRUE, , specify_cp = cp)
+
+#run simulations on number of visits
+simulation_results <- run_cp_bootstrap(tmp_sim_data,
+                                       sim_version = "visits",
+                                       boot_trials = 0,
+                                       n_sim_trials = 25000,
+                                       new_draw_weight = NULL,
+                                       num_cores = NULL,
+                                       sim_duartion_for_regression = FALSE,
+                                       no_bootstrapping = TRUE)
+}
