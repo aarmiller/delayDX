@@ -70,7 +70,7 @@ cp <- 20L
 
 # run prep sim function
 tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
-                              week_period = TRUE, , specify_cp = cp)
+                              week_period = TRUE, specify_cp = cp)
 
 #run simulations on number of visits
 simulation_results <- run_cp_bootstrap(tmp_sim_data,
@@ -83,7 +83,7 @@ simulation_results <- run_cp_bootstrap(tmp_sim_data,
                                        no_bootstrapping = FALSE)
 
 
-### Run simulations without bootstrapping and allow function to find optimal change point for inputted data ###
+### Run simulations without bootstrapping and allow function to find the optimal change point for inputted data ###
 
 # run prep sim function
 tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
@@ -100,15 +100,14 @@ simulation_results <- run_cp_bootstrap(tmp_sim_data,
                                        no_bootstrapping = TRUE)
 
 
-### Run simulations without bootstrapping and specify a change point instead of allowing function to find optimal change point ###
-### to apply to the data ###
+### Run simulations without bootstrapping and specify a change point instead of allowing function to find the optimal change point to apply to the data ###
 
 # set a change point
 cp <- 20L
 
 # run prep sim function
 tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "cusum", start_day = 1L, by_days = 1L,
-                              week_period = TRUE, , specify_cp = cp)
+                              week_period = TRUE, specify_cp = cp)
 
 #run simulations on number of visits
 simulation_results <- run_cp_bootstrap(tmp_sim_data,
