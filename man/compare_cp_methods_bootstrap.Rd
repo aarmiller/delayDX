@@ -48,7 +48,7 @@ load("/Shared/Statepi_Diagnosis/grant_projects/hsv_enceph/scripts/validation/enr
 # rename ED column
 final_time_map <- final_time_map \%>\% rename(ed = ED)
 
-# run prep sim function (note = enter any cp_method here, it just act as a place holder)
+# run prep sim function (note = enter any cp_method here, it just acts as a place holder)
 tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "lm", start_day = 1L, by_days = 1L,
                               week_period = TRUE)
 
