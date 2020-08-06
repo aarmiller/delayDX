@@ -37,10 +37,10 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
                             week_period=FALSE, specify_cp = NULL){
 
   #Require some necessary packages
-  #require(trend)
-  #require(changepoint)
-  #require(tidyverse)
-  
+  require(trend)
+  require(changepoint)
+  require(tidyverse)
+
   #Reorder data for easy time series usage
   cp_out <- arrange(data, -period)
 
@@ -51,7 +51,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   #Convert to a time series object
   t_series <- ts(cp_out$var_name, start = min(-1*cp_out$period),
                    frequency = 1)
-  
+
   if (is.null(specify_cp)){
     #Identify CP and find which period it corresponds to
     cp <- cp_out$period[pettitt.test(t_series)$estimate[[1]]]
@@ -104,10 +104,10 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   } else {
     #Output data about the changepoint itself
     change_point <- data.frame(Y = cp_out %>% filter(period == cp) %>% .$var_name,
-                               t = which(cp_out$period == cp),                                
+                               t = which(cp_out$period == cp),
                                period = cp)
   }
-  
+
   #Output data about predictions
   pred <- data.frame(period=cp_out$period,
                      Y=cp_out$var_name,
@@ -130,7 +130,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
       ggplot2::theme_light() +
       ggplot2::geom_vline(xintercept = change_point$t, color="blue", size=.8)
   }
-    
+
   #Compile output
   cp_out <- list(miss_bins=miss_bins,
                  change_point=change_point,
@@ -187,7 +187,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
   #Convert to a time series object
   t_series <- ts(cp_out$var_name, start = min(-1*cp_out$period),
                  frequency = 1)
-  
+
   if (is.null(specify_cp)){
   #Identify CP and find which period it corresponds to
     cp_est <- suppressWarnings( cpts(cpt.mean(t_series,pen.value=1,penalty='None',test.stat='CUSUM')) )
@@ -195,7 +195,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
   } else {
     cp <- specify_cp
   }
-  
+
   #Extract data for the model, all periods after cp
   model_data <- cp_out %>% filter(period>=cp) %>% mutate(period_neg=-1*period) %>%
     mutate(week_period = as.factor(period %% 7))
@@ -241,7 +241,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
   } else {
     #Output data about the changepoint itself
     change_point <- data.frame(Y = cp_out %>% filter(period == cp) %>% .$var_name,
-                               t = which(cp_out$period == cp),                                
+                               t = which(cp_out$period == cp),
                                period = cp)
   }
 
@@ -252,7 +252,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
                      pred1=model_preds,
                      pred=cp_out$var_name,
                      num_miss = cp_out$var_name - model_preds)
-  
+
   if (is.null(specify_cp)){
     #Generate a plot
     cp_plot <- pred %>% ggplot2::ggplot(aes(t, pred)) + ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
@@ -291,7 +291,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
 #' @param eval_criteria The evaluation criteria used to find change points
 #' @param return_miss_only Logical argument to only return the tibbles of miss visit counts
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
-#' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index) 
+#' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
 #' @examples
 #' cp_result_original <- final_time_map %>%
 #' count_prior_events_truven(event_name = "any_ssd", start_day = 1, by_days = 1) %>%
@@ -307,7 +307,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
     dplyr::arrange(dplyr::desc(period)) %>%
     dplyr::mutate(Y=var_name,
                   t=dplyr::row_number())
-  
+
   if (is.null(specify_cp)) {
     if (method=="spline"){
       fits = tibble::tibble(cp=3:max(data$t)) %>%
@@ -315,43 +315,43 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
                                      ~fit_cp_spline(data = data, x=.) )) %>%
         tidyr::unnest(res)
     }
-  
+
     if (method=="lm"){
       fits = tibble::tibble(cp=2:max(data$t)) %>%
         dplyr::mutate(res=purrr::map(cp, ~fit_cp_lm(data = data, x=.) )) %>%
         tidyr::unnest(res)
     }
-  
+
     if (method=="lm_cube"){
       fits = tibble::tibble(cp=2:max(data$t)) %>%
         dplyr::mutate(res=purrr::map(cp, ~fit_cp_lm_cube(data = data, x=.) )) %>%
         tidyr::unnest(res)
     }
-  
+
     if (method=="cube"){
       fits = tibble::tibble(cp=2:max(data$t)) %>%
         dplyr::mutate(res=purrr::map(cp, ~fit_cp_cube(data = data, x=.) )) %>%
         tidyr::unnest(res)
     }
-  
+
     if (method=="quad"){
       fits = tibble::tibble(cp=2:max(data$t)) %>%
         dplyr::mutate(res=purrr::map(cp, ~fit_cp_quad(data = data, x=.) )) %>%
         tidyr::unnest(res)
     }
-  
+
     if (method=="lm_quad"){
       fits = tibble::tibble(cp=2:max(data$t)) %>%
         dplyr::mutate(res=purrr::map(cp, ~fit_cp_lm_quad(data = data, x=.) )) %>%
         tidyr::unnest(res)
     }
-  
+
     if (method=="exp"){
       fits = tibble::tibble(cp=2:max(data$t)) %>%
         dplyr::mutate(res=purrr::map(cp, ~fit_cp_exp(data = data, x=.) )) %>%
         tidyr::unnest(res)
     }
-  
+
     if (eval_criteria %in% c("r.squared","adj.r.squared")){
       change_t <- fits$cp[fits[eval_criteria]==max(fits[eval_criteria])]
     } else {
@@ -359,31 +359,31 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
     }
   } else{
     change_t <- data$t[data$period == specify_cp]
-    
+
     if (method=="spline"){
-      fits = fit_cp_spline(data = data, x=change_t) 
+      fits = fit_cp_spline(data = data, x=change_t)
     }
-    
+
     if (method=="lm"){
       fits = fit_cp_lm(data = data, x=change_t)
     }
-    
+
     if (method=="lm_cube"){
       fits = fit_cp_lm_cube(data = data, x=change_t)
     }
-    
+
     if (method=="cube"){
       fits = fit_cp_cube(data = data, x=change_t)
     }
-    
+
     if (method=="quad"){
       fits = fit_cp_quad(data = data, x=change_t)
     }
-    
+
     if (method=="lm_quad"){
       fits = fit_cp_lm_quad(data = data, x=change_t)
     }
-    
+
     if (method=="exp"){
       fits = fit_cp_exp(data = data, x=change_t)
     }
@@ -471,7 +471,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
 #' method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation
 #' @param return_miss_only Logical argument to only return the tibbles of miss visit counts
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
-#' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index) 
+#' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
 #' @return A list containing tibbles of information about missed visits. These tibbles change
 #' depending on the method used, but all contain miss predictions and a plot
 #'
