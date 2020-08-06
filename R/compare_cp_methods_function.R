@@ -237,9 +237,6 @@ boot_compare_methods <- function (sim_data, method1, method2, loss_fun) {
 
 compare_cp_methods_bootstrap <-   function (sim_data, boot_trials  = 100L, num_cores = NULL,
                                             method1, method2, loss_fun) {
-  require(trend)
-  require(changepoint)
-  require(tidyverse)
 
   if ((!method1 %in% c("lm", "lm_quad", "lm_cube", "quad", "cube", "exp", "spline", "cusum", "pettitt")) |
       (!method2 %in% c("lm", "lm_quad", "lm_cube", "quad", "cube", "exp", "spline", "cusum", "pettitt"))){
@@ -268,7 +265,8 @@ compare_cp_methods_bootstrap <-   function (sim_data, boot_trials  = 100L, num_c
 
     parallel::clusterCall(cluster, function() library(tidyverse))
     parallel::clusterCall(cluster, function() library(delayDX))
-
+    parallel::clusterCall(cluster, function() library(trend))
+    parallel::clusterCall(cluster, function() library(changepoint))
 
     tmp <- parallel::parLapply(cl = cluster,
                                  1:boot_trials,
