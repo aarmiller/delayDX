@@ -96,6 +96,10 @@ run_compare_method <- function (sim_data, method1, method2, loss_fun = "MSE")  {
          "MSE", "RMSE", "MAE", "MSLE", "RMSLE"')
   }
 
+  if (method1 == method2){
+    stop("Please input two different methods to compare")
+  }
+
   out <- sim_data$sim_cp %>%
     find_change_point(var_name = "n_miss_visits",
                       method = method1,
@@ -167,6 +171,10 @@ boot_compare_methods <- function (sim_data, method1, method2, loss_fun) {
          "MSE", "RMSE", "MAE", "MSLE", "RMSLE"')
   }
 
+  if (method1 == method2){
+    stop("Please input two different methods to compare")
+  }
+
   # draw bootstrapped samples
     draw_time_map <- sim_data$time_map %>%
       dplyr::distinct(enrolid) %>%
@@ -219,7 +227,7 @@ boot_compare_methods <- function (sim_data, method1, method2, loss_fun) {
 #' # rename ED column
 #' final_time_map <- final_time_map %>% rename(ed = ED)
 #'
-#' # run prep sim function (note = enter any cp_method here, it just act as a place holder)
+#' # run prep sim function (note = enter any cp_method here, it just acts as a place holder)
 #' tmp_sim_data <- prep_sim_data(final_time_map, event_name = "any_ssd", cp_method = "lm", start_day = 1L, by_days = 1L,
 #'                               week_period = TRUE)
 #'
@@ -248,6 +256,11 @@ compare_cp_methods_bootstrap <-   function (sim_data, boot_trials  = 100L, num_c
     stop('The method selected is not avaiable, please select from one of the following:
          "MSE", "RMSE", "MAE", "MSLE", or "RMSLE"')
   }
+
+  if (method1 == method2){
+    stop("Please input two different methods to compare")
+  }
+
 
   simulation_data <- sim_data
   method_1  = method1
