@@ -12,7 +12,8 @@ prep_sim_data(
   cp_method = "lm_quad",
   specify_cp = NULL,
   eval_criteria = "AIC",
-  week_period = FALSE
+  week_period = FALSE,
+  prediction_bound_for_sim = FALSE
 )
 }
 \arguments{
@@ -34,6 +35,9 @@ linear regression method}
 
 \item{week_period}{Logical to incorporate a "day of the week" effect into the linear model, if
 method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation}
+
+\item{prediction_bound_for_sim}{Logical to specify whether or not to use the estimated predicted value or the upper bound 90%
+prediction value in the simulations. The defualt is FALSE which uses the estimated predicited value.}
 }
 \description{
 Prepare data for simulation

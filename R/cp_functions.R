@@ -77,18 +77,23 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   } else{
   pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>% select(var_name,period_neg)
   }
-  model_preds <- predict(model, pred_vars)
+
+  model_pred_intervals <- predict.lm(model, pred_vars, interval = "prediction", level = 0.90)
 
   #Collect all data needed for cp_out in this function
 
-  #First get miss bins and statistics. Hard code num_miss to be
+  #First get miss bins and statistics. Hard code num_miss and num_miss_upper_int to be
   #floored at 0
   miss_bins <- data.frame(period=cp_out$period,
                           Y=cp_out$var_name,
-                          pred1=model_preds,
+                          pred1= model_pred_intervals[, "fit"],
+                          lower_int_pred1 = model_pred_intervals[, "lwr"],
+                          upper_int_pred1 = model_pred_intervals[, "upr"],
                           pred=cp_out$var_name,
-                          num_miss = cp_out$var_name - model_preds) %>%
-    mutate(num_miss = num_miss*(num_miss>=0))
+                          num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
+                          num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"]) %>%
+    mutate(num_miss = num_miss*(num_miss>=0)) %>%
+    mutate(num_miss_upper_int = num_miss_upper_int*(num_miss_upper_int>=0))
 
   #Filter to only times beyond CP
   miss_bins <- miss_bins %>% filter(period<=cp)
@@ -112,9 +117,12 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   pred <- data.frame(period=cp_out$period,
                      Y=cp_out$var_name,
                      t = 1:nrow(cp_out),
-                     pred1=model_preds,
+                     pred1= model_pred_intervals[, "fit"],
+                     lower_int_pred1 = model_pred_intervals[, "lwr"],
+                     upper_int_pred1 = model_pred_intervals[, "upr"],
                      pred=cp_out$var_name,
-                     num_miss = cp_out$var_name - model_preds)
+                     num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
+                     num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"])
 
   if (is.null(specify_cp)){
     #Generate a plot
@@ -214,18 +222,23 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
   } else{
     pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>% select(var_name,period_neg)
   }
-  model_preds <- predict(model, pred_vars)
+
+  model_pred_intervals <- predict.lm(model, pred_vars, interval = "prediction", level = 0.90)
 
   #Collect all data needed for cp_out in this function
 
-  #First get miss bins and statistics. Hard code num_miss to be
+  #First get miss bins and statistics. Hard code num_miss and num_miss_upper_int to be
   #floored at 0
   miss_bins <- data.frame(period=cp_out$period,
                           Y=cp_out$var_name,
-                          pred1=model_preds,
+                          pred1= model_pred_intervals[, "fit"],
+                          lower_int_pred1 = model_pred_intervals[, "lwr"],
+                          upper_int_pred1 = model_pred_intervals[, "upr"],
                           pred=cp_out$var_name,
-                          num_miss = cp_out$var_name - model_preds) %>%
-    mutate(num_miss = num_miss*(num_miss>=0))
+                          num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
+                          num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"]) %>%
+    mutate(num_miss = num_miss*(num_miss>=0)) %>%
+    mutate(num_miss_upper_int = num_miss_upper_int*(num_miss_upper_int>=0))
 
   #Filter to only times beyond CP
   miss_bins <- miss_bins %>% filter(period<=cp)
@@ -249,9 +262,13 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
   pred <- data.frame(period=cp_out$period,
                      Y=cp_out$var_name,
                      t = 1:nrow(cp_out),
-                     pred1=model_preds,
+                     pred1= model_pred_intervals[, "fit"],
+                     lower_int_pred1 = model_pred_intervals[, "lwr"],
+                     upper_int_pred1 = model_pred_intervals[, "upr"],
                      pred=cp_out$var_name,
-                     num_miss = cp_out$var_name - model_preds)
+                     num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
+                     num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"])
+
 
   if (is.null(specify_cp)){
     #Generate a plot

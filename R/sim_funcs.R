@@ -11,10 +11,12 @@
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
 #' @param week_period Logical to incorporate a "day of the week" effect into the linear model, if
 #' method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation
+#' @param prediction_bound_for_sim Logical to specify whether or not to use the estimated predicted value or the upper bound 90%
+#' prediction value in the simulations. The defualt is FALSE which uses the estimated predicited value.
 #' @export
 #'
 prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_ssd", cp_method = "lm_quad", specify_cp = NULL,
-                          eval_criteria="AIC", week_period=FALSE){
+                          eval_criteria="AIC", week_period=FALSE, prediction_bound_for_sim = FALSE){
 
   sim_time_map <- time_map_data %>%
     dplyr::mutate(period = ((-days_since_dx - start_day)%/%by_days),  # create period based on time shifts
@@ -62,7 +64,8 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1,event_name = "any_
               start_day=start_day,
               eval_criteria=eval_criteria,
               week_period=week_period,
-              specify_cp = specify_cp))
+              specify_cp = specify_cp,
+              prediction_bound_for_sim = prediction_bound_for_sim))
 
 }
 
@@ -436,6 +439,18 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
       # pull out the miss bins
       miss_bins <- sim_cp$miss_bins
 
+      # update miss bins to reflect predicted value or upper bound prediction interval
+      if (sim_data$prediction_bound_for_sim == FALSE){
+
+        miss_bins <- miss_bins %>% select(-lower_int_pred1, -upper_int_pred1,
+                                         -num_miss_upper_int)
+      } else {
+        miss_bins <- miss_bins %>% select(period, Y,
+                                           pred1 = upper_int_pred1,
+                                           pred,
+                                           num_miss = num_miss_upper_int)
+      }
+
       # estimated number of missed visits and observed missed visits
       miss_stats <- miss_bins %>%
         dplyr::summarise(miss_visits_est = sum(num_miss),
@@ -471,6 +486,18 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
 
       # pull out the miss bins
       miss_bins <- sim_cp$miss_bins
+
+      # update miss bins to reflect predicted value or upper bound prediction interval
+      if (sim_data$prediction_bound_for_sim == FALSE){
+
+        miss_bins <- miss_bins %>% select(-lower_int_pred1, -upper_int_pred1,
+                                          -num_miss_upper_int)
+      } else {
+        miss_bins <- miss_bins %>% select(period, Y,
+                                          pred1 = upper_int_pred1,
+                                          pred,
+                                          num_miss = num_miss_upper_int)
+      }
 
       # estimated number of missed visits and observed missed visits
       # note that this is area under the curve and for patients this does not tell us much
