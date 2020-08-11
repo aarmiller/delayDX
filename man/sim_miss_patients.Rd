@@ -13,7 +13,7 @@ This dataset should be created using the `prep_sim_data()` function}
 \item{new_draw_weight}{a weighing parameter used to assign preference to drawing previously "missed" patients
 at each time step. A value of 0 applies strict preference to drawing patients who
 have been assigned to miss in prior time steps, while a value 0.5 applies equal weight
-to patients who have and have not been previously selected.}
+to patients who have and have not been previously selected}
 }
 \description{
 Simulated missed patients from an estimated set of miss bins

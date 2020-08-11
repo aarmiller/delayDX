@@ -18,7 +18,7 @@ collect_table(
 \item{years}{vector of years to collect. Note: if no argument is provided all years will be selected}
 }
 \value{
-A tibble with all possible combinations of setting, source, and year.
+A tibble with all possible combinations of setting, source, and year
 }
 \description{
 Sets up a collection tibble for holding and distributing queries across a rand of tables in the database

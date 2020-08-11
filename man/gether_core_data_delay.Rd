@@ -2,7 +2,7 @@
 % Please edit documentation in R/bulid_timemap_function_w_ED.R
 \name{gether_core_data_delay}
 \alias{gether_core_data_delay}
-\title{Gather variables from core information over multiple core tables (in parallel).}
+\title{Gather variables from core information over multiple core tables (in parallel)}
 \usage{
 gether_core_data_delay(
   collect_tab = collect_table(),
@@ -14,20 +14,20 @@ gether_core_data_delay(
 }
 \arguments{
 \item{collect_tab}{A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access.
-Default is all possible combinations of setting, source, and year.}
+Default is all possible combinations of setting, source, and year}
 
-\item{vars}{Vector of variables it the core table to return.}
+\item{vars}{Vector of variables it the core table to return}
 
-\item{db_path}{Path to the database.}
+\item{db_path}{Path to the database}
 
-\item{collect_n}{The number of observations to return.}
+\item{collect_n}{The number of observations to return}
 
 \item{num_cores}{The number of worker cores to use. If not specified will determined the number of cores based on the which ever
-is the smallest value between number of rows in for collect_tab or detected number of cores - 1.}
+is the smallest value between number of rows in for collect_tab or detected number of cores - 1}
 }
 \value{
-A tibble with all the specified variables to return over all designated core tables.
+A tibble with all the specified variables to return over all designated core tables
 }
 \description{
-Gather variables from core information over multiple core tables (in parallel).
+Gather variables from core information over multiple core tables (in parallel)
 }

@@ -4,7 +4,7 @@
 #' @param settings "inpatient", "outpatient" or c("inpatient","outpatient")
 #' @param sources "ccae" or "mdcr" or c("ccae","mdcr")
 #' @param years vector of years to collect. Note: if no argument is provided all years will be selected
-#' @return A tibble with all possible combinations of setting, source, and year.
+#' @return A tibble with all possible combinations of setting, source, and year
 #' @export
 #'
 
@@ -23,9 +23,9 @@ collect_table <- function (settings = c("inpatient", "outpatient"),
 #' Builds a time map for a specific database
 #' @name build_time_map_delay
 #' @param collect_tab A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access.
-#' Default is all possible combinations of setting, source, and year.
+#' Default is all possible combinations of setting, source, and year
 #' @param db_con The database connection
-#' @param db_path Path to the database.
+#' @param db_path Path to the database
 #' @return A tibble with a time map containing visit level information from the database. Includes admission date, year, setting, enrolid,
 #' standard place of care, key, discharge date, and location of care (i.e. inpatient, outpatient, or ED)
 #' @export
@@ -54,11 +54,11 @@ build_time_map_delay <- function (db_con, db_path, collect_tab = collect_table()
 #' Generates outpatient and inpatient visit keys and stores them in the database.
 #' @name add_time_map_keys_delay
 #' @param collect_tab A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access.
-#' Default is all possible combinations of setting, source, and year.
+#' Default is all possible combinations of setting, source, and year
 #' @param db_con The database connection
-#' @param db_path Path to the database.
+#' @param db_path Path to the database
 #' @param overwrite Option to overwrite outpatient and inpatient key datasets if already present in database. Default is FALSE.
-#' @param temporary Option to store the outpatient and inpatient key datasets in the database temporarily or permanently. Default is temporary.
+#' @param temporary Option to store the outpatient and inpatient key datasets in the database temporarily or permanently. Default is temporary
 #' @export
 #'
 
@@ -80,13 +80,13 @@ add_time_map_keys_delay <- function (collect_tab = collect_table(), db_con, db_p
   }
 }
 
-#' Gather variables from core information for a specific table.
+#' Gather variables from core information for a specific table
 #' @name get_core_data_delay
-#' @param table_name The specific core table name in the database to access.
-#' @param vars Vector of variables it the core table to return.
-#' @param db_path Path to the database.
-#' @param collect_n The number of observations to return.
-#' @return A tibble with all the specified variables to return. Number of rows of tibble returned is determined by the collect_n argument.
+#' @param table_name The specific core table name in the database to access
+#' @param vars Vector of variables it the core table to return
+#' @param db_path Path to the database
+#' @param collect_n The number of observations to return
+#' @return A tibble with all the specified variables to return. Number of rows of tibble returned is determined by the collect_n argument
 #' @export
 #'
 
@@ -106,16 +106,16 @@ get_core_data_delay <- function (table_name, vars = c(), db_path, collect_n = In
   return(out)
 }
 
-#' Gather variables from core information over multiple core tables (in parallel).
+#' Gather variables from core information over multiple core tables (in parallel)
 #' @name gether_core_data_delay
 #' @param collect_tab A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access.
-#' Default is all possible combinations of setting, source, and year.
-#' @param vars Vector of variables it the core table to return.
-#' @param db_path Path to the database.
-#' @param collect_n The number of observations to return.
+#' Default is all possible combinations of setting, source, and year
+#' @param vars Vector of variables it the core table to return
+#' @param db_path Path to the database
+#' @param collect_n The number of observations to return
 #' @param num_cores The number of worker cores to use. If not specified will determined the number of cores based on the which ever
-#' is the smallest value between number of rows in for collect_tab or detected number of cores - 1.
-#' @return A tibble with all the specified variables to return over all designated core tables.
+#' is the smallest value between number of rows in for collect_tab or detected number of cores - 1
+#' @return A tibble with all the specified variables to return over all designated core tables
 #' @export
 #'
 
@@ -160,10 +160,10 @@ gether_core_data_delay <- function (collect_tab = collect_table(), vars = c(), d
 
 #' Build inpatient and outpatient (also includes ED) key datasets
 #' @name build_time_map_keys_delay
-#' @param collect_tab A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access.
-#' Default is all possible combinations of setting, source, and year.
+#' @param collect_tab A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access
+#' Default is all possible combinations of setting, source, and year
 #' @param db_con The database connection
-#' @param db_path Path to the database.
+#' @param db_path Path to the database
 #' @export
 #'
 

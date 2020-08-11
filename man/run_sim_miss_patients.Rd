@@ -26,7 +26,7 @@ to patients who have and have not been previously selected.}
 \item{no_bootstrapping}{Specifies whether you want to run the simulations without bootstrapping the original dataset}
 
 \item{num_cores}{The number of worker cores to use. If not specified will determined the number of cores based on the which ever
-is the smallest value between number of trials or detected number of cores - 1.}
+is the smallest value between number of trials or detected number of cores - 1}
 }
 \description{
 Run multiple simulations of missed patients
