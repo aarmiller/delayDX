@@ -5,11 +5,11 @@
 \title{Builds a time map for a specific database}
 \arguments{
 \item{collect_tab}{A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access.
-Default is all possible combinations of setting, source, and year.}
+Default is all possible combinations of setting, source, and year}
 
 \item{db_con}{The database connection}
 
-\item{db_path}{Path to the database.}
+\item{db_path}{Path to the database}
 }
 \value{
 A tibble with a time map containing visit level information from the database. Includes admission date, year, setting, enrolid,

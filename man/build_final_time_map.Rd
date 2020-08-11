@@ -12,18 +12,18 @@ build_final_time_map(
 )
 }
 \arguments{
-\item{condition_short_name}{The condition of interest. Specifically the short_name version of the condition.}
+\item{condition_short_name}{The condition of interest. Specifically the short_name version of the condition}
 
 \item{duration_prior_to_index}{How far from the index should the time map extend back (e.g. 90, 180, 365)}
 
-\item{cohort_path}{Path to the specific cohort for the condition of interest.}
+\item{cohort_path}{Path to the specific cohort for the condition of interest}
 
 \item{ssd_list}{A list of diagnosis codes of interest. The diagnosis codes need to be seperated into
 diagnosis categories (e.g. cough, fever, etc.). Additionally, within the categories, diagnosis codes should be seperated into ICD 9 and
-ICD 10 specific codes, with list elements labled as icd9_codes and icd10_codes.}
+ICD 10 specific codes, with list elements labled as icd9_codes and icd10_codes}
 }
 \value{
-A tibble with all the specified diagnosis codes and the corresponding visit key where the diagnosis codes appeared.
+A tibble with all the specified diagnosis codes and the corresponding visit key where the diagnosis codes appeared
 }
 \description{
 Builds a time map containing visit specific information for a specific condition and cohort.

@@ -7,6 +7,167 @@
 #of the model fit, miss_bins, and other info
 ###################################################
 
+#' Identify change point using a loss function method and find expected SSD visits/calculate misses. This is done
+#' by fitting a linear model for data prior to i, with i ranging from period 0 to max period - 2. For a specified loss function,
+#' the first local minima is used used to identifiy the optimal change point
+#'
+#' @title find_cp_loss_fun
+#' @param data A dataframe output by count_prior_events_truven
+#' @param var_name A character string of outcome for which to apply analysis
+#' @param return_miss_only Logical to only return miss information
+#' @param week_period Logical to incorporate a "day of the week" effect into
+#' the linear model. Note this is only sensible for one-day period aggregation.
+#' @param loss_function The loss function used to identify the change point (mean squared error (MSE), root mean squared error (RMSE),
+#' mean absolute error (MAE), mean squared log error (MSLE), or root mean squared log error (RMSLE)
+#' @param return_loss_fun_tab_only Logical to only return loss function table that includes estimates for all loss functions available
+#' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
+#' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
+#' @return A list containing miss information, changepoint information, predictions,
+#' the model itself, and a plot of the middle finger curve and model.
+#'
+#' @examples
+#' cp_result_pettit <- final_time_map %>%
+#' filter(days_since_dx >= -180) %>%
+#' count_prior_events_truven(event_name = "any_ssd", start_day = 1, by_days = 1) %>%
+#' find_cp_loss_fun(var_name = "n_miss_visits", return_miss_only = FALSE, week_period=TRUE, loss_function = "MAE")
+#'
+#' @export
+#'
+find_cp_loss_fun <- function(data, var_name = "n_miss_visits", return_miss_only = FALSE, return_loss_fun_tab_only = FALSE,
+                            week_period=FALSE, specify_cp = NULL, loss_function = "RMSE"){
+
+  #Require some necessary packages
+  require(tidyverse)
+
+  if (!loss_function %in% c("MSE", "RMSE", "MAE", "MSLE", "RMSLE")){
+    stop('The method selected is not avaiable, please select from one of the following:
+         "MSE", "RMSE", "MAE", "MSLE", or "RMSLE"')
+  }
+
+  #Reorder data for easy time series usage
+  cp_out <- arrange(data, -period)
+
+  #Create a dummy column that is variable of interest
+  cp_out$var_name <- cp_out[[var_name]]
+
+  # fit linear model by period from 0 to max period - 2
+  loss_fun_table <- tibble()
+  data <- cp_out %>% arrange(period) %>%
+    mutate(week_period = as.factor(period %% 7))
+  for (i in data %>% filter(period < max(period) -1) %>% .$period){
+    dataset <- data %>% filter(period > i)
+
+    if(week_period){
+      pred <- predict.lm(lm(var_name ~ period + week_period, data = dataset))
+    } else {
+      pred <- predict.lm(lm(var_name ~ period, data = dataset))
+    }
+
+    out <- dataset %>% mutate(pred = pred)
+
+    suppressWarnings(
+    out1 <- tibble(period = i,
+                   RMSE = RMSE(out$pred, out$var_name),
+                   MSE = MSE(out$pred, out$var_name),
+                   MAE = MAE(out$pred, out$var_name),
+                   MSLE = MSLE(out$pred, out$var_name),
+                   RMSLE = RMSLE(out$pred, out$var_name))
+    )
+
+    loss_fun_table <- bind_rows(loss_fun_table, out1)
+  }
+
+  if (return_loss_fun_tab_only){
+   return(loss_fun_table)
+  }
+
+  #Identify CP and find which period it corresponds to
+  if (is.null(specify_cp)){
+    local_min <- which(diff(sign(diff(loss_fun_table[[loss_function]])))==-2)+1
+    cp <- local_min[1]
+  } else {
+    cp <- specify_cp
+  }
+
+  #Extract data for the model, all periods after cp
+  model_data <- cp_out %>% filter(period > cp) %>% mutate(period_neg=-1*period) %>%
+    mutate(week_period = as.factor(period %% 7))
+
+  #Fit model, different if request periodicity
+  if(week_period){
+    model <- lm(var_name ~ period_neg + week_period, data = model_data)
+  } else{
+    model <- lm(var_name ~ period_neg, data = model_data)
+  }
+
+  #Get prediction covariates and make predictions
+  if(week_period){
+    pred_vars <- cp_out %>% mutate(period_neg = -1*period) %>%
+      mutate(week_period = as.factor(period %% 7)) %>% select(var_name, period_neg, week_period)
+  } else{
+    pred_vars <- cp_out %>% mutate(period_neg = -1*period) %>% select(var_name, period_neg)
+  }
+
+  model_pred_intervals <- predict.lm(model, pred_vars, interval = "prediction", level = 0.90)
+
+  #Collect all data needed for cp_out in this function
+
+  #First get miss bins and statistics. Hard code num_miss and num_miss_upper_int to be
+  #floored at 0
+  miss_bins <- data.frame(period=cp_out$period,
+                          Y=cp_out$var_name,
+                          pred1= model_pred_intervals[, "fit"],
+                          lower_int_pred1 = model_pred_intervals[, "lwr"],
+                          upper_int_pred1 = model_pred_intervals[, "upr"],
+                          pred=cp_out$var_name,
+                          num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
+                          num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"]) %>%
+    mutate(num_miss = num_miss*(num_miss>=0)) %>%
+    mutate(num_miss_upper_int = num_miss_upper_int*(num_miss_upper_int>=0))
+
+  #Filter to only times beyond CP
+  miss_bins <- miss_bins %>% filter(period <= cp)
+  if (return_miss_only){
+    return(miss_bins)
+  }
+
+  #Output data about the changepoint itself
+  change_point <- data.frame(Y = cp_out %>% filter(period == cp) %>% .$var_name,
+                               t = which(cp_out$period == cp),
+                               period = cp)
+
+  #Output data about predictions
+  pred <- data.frame(period=cp_out$period,
+                     Y=cp_out$var_name,
+                     t = 1:nrow(cp_out),
+                     pred1= model_pred_intervals[, "fit"],
+                     lower_int_pred1 = model_pred_intervals[, "lwr"],
+                     upper_int_pred1 = model_pred_intervals[, "upr"],
+                     pred=cp_out$var_name,
+                     num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
+                     num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"])
+
+  cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
+    ggtitle(paste0("Loss function = ", loss_function, " & day of the week = ", week_period))+
+    ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
+    geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
+    ggplot2::geom_line(size=.8) +
+    ggplot2::geom_point(aes(t,Y),size=.8) +
+    ggplot2::theme_light() +
+    ggplot2::geom_vline(xintercept = change_point$period*-1 , color="blue", size=.8)
+
+  #Compile output
+  cp_out <- list(miss_bins=miss_bins,
+                 change_point=change_point,
+                 pred=pred,
+                 model=model,
+                 cp_plot=cp_plot)
+
+
+  return(cp_out)
+
+}
+
 
 #A function to identify the changepoint using the Pettitt method. Requires:
 #data: an output of count_prior_events_truven
@@ -60,7 +221,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   }
 
   #Extract data for the model, all periods after cp
-  model_data <- cp_out %>% filter(period>=cp) %>% mutate(period_neg=-1*period) %>%
+  model_data <- cp_out %>% filter(period > cp) %>% mutate(period_neg=-1*period) %>%
     mutate(week_period = as.factor(period %% 7))
 
   #Fit model, different if request periodicity
@@ -205,7 +366,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
   }
 
   #Extract data for the model, all periods after cp
-  model_data <- cp_out %>% filter(period>=cp) %>% mutate(period_neg=-1*period) %>%
+  model_data <- cp_out %>% filter(period > cp) %>% mutate(period_neg=-1*period) %>%
     mutate(week_period = as.factor(period %% 7))
 
   #Fit model, different if request periodicity
@@ -517,8 +678,15 @@ find_change_point <- function(data,var_name="n_miss_visits",method,eval_criteria
                             week_period = week_period,
                             specify_cp = specify_cp)
     return(output)
+  } else if(method %in% c("MSE", "RMSE", "MAE", "MSLE", "RMSLE")){
+    output <- find_cp_loss_fun(data, var_name = var_name, return_miss_only = return_miss_only,
+                               loss_function = method,
+                               return_loss_fun_tab_only = FALSE,
+                               week_period = week_period,
+                               specify_cp = specify_cp)
+    return(output)
   } else{
-    cat("Error: No valid method was supplied. Returning NULL")
+    cat("Error: No valid method was supplied. Returning ")
     return(NULL)
   }
 

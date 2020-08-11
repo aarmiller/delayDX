@@ -18,7 +18,7 @@ This dataset should be created using the `prep_sim_data()` function}
 mean absolute error (MAE), mean squared log error (MSLE), or root mean squared log error (RMSLE)}
 }
 \value{
-A one row tibble which 3 columns: 1) the loss function used, 2) the value for method 1, and 3) the value for method 2.
+A one row tibble which 3 columns: 1) the loss function used, 2) the value for method 1, and 3) the value for method 2
 }
 \description{
 Bootstrapped change_point comparisons

@@ -14,15 +14,15 @@ add_time_map_keys_delay(
 }
 \arguments{
 \item{collect_tab}{A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access.
-Default is all possible combinations of setting, source, and year.}
+Default is all possible combinations of setting, source, and year}
 
 \item{db_con}{The database connection}
 
-\item{db_path}{Path to the database.}
+\item{db_path}{Path to the database}
 
 \item{overwrite}{Option to overwrite outpatient and inpatient key datasets if already present in database. Default is FALSE.}
 
-\item{temporary}{Option to store the outpatient and inpatient key datasets in the database temporarily or permanently. Default is temporary.}
+\item{temporary}{Option to store the outpatient and inpatient key datasets in the database temporarily or permanently. Default is temporary}
 }
 \description{
 Generates outpatient and inpatient visit keys and stores them in the database.

@@ -2,22 +2,22 @@
 % Please edit documentation in R/bulid_timemap_function_w_ED.R
 \name{get_core_data_delay}
 \alias{get_core_data_delay}
-\title{Gather variables from core information for a specific table.}
+\title{Gather variables from core information for a specific table}
 \usage{
 get_core_data_delay(table_name, vars = c(), db_path, collect_n = Inf)
 }
 \arguments{
-\item{table_name}{The specific core table name in the database to access.}
+\item{table_name}{The specific core table name in the database to access}
 
-\item{vars}{Vector of variables it the core table to return.}
+\item{vars}{Vector of variables it the core table to return}
 
-\item{db_path}{Path to the database.}
+\item{db_path}{Path to the database}
 
-\item{collect_n}{The number of observations to return.}
+\item{collect_n}{The number of observations to return}
 }
 \value{
-A tibble with all the specified variables to return. Number of rows of tibble returned is determined by the collect_n argument.
+A tibble with all the specified variables to return. Number of rows of tibble returned is determined by the collect_n argument
 }
 \description{
-Gather variables from core information for a specific table.
+Gather variables from core information for a specific table
 }

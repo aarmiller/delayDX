@@ -78,7 +78,7 @@ RMSLE <- function(predicted, observed){
 #' @param method2 Second change point method to compare
 #' @param loss_fun The loss function used in the comparison (mean squared error (MSE), root mean squared error (RMSE),
 #' mean absolute error (MAE), mean squared log error (MSLE), or root mean squared log error (RMSLE)
-#' @return A one row tibble which 3 columns: 1) the loss function used, 2) the value for method 1, and 3) the value for method 2.
+#' @return A one row tibble which 3 columns: 1) the loss function used, 2) the value for method 1, and 3) the value for method 2
 #'
 #' @export
 #'
@@ -152,7 +152,7 @@ run_compare_method <- function (sim_data, method1, method2, loss_fun = "MSE")  {
 #' @param method2 Second change point method to compare
 #' @param loss_fun The loss function used in the comparison (mean squared error (MSE), root mean squared error (RMSE),
 #' mean absolute error (MAE), mean squared log error (MSLE), or root mean squared log error (RMSLE)
-#' @return A one row tibble which 3 columns: 1) the loss function used, 2) the value for method 1, and 3) the value for method 2.
+#' @return A one row tibble which 3 columns: 1) the loss function used, 2) the value for method 1, and 3) the value for method 2
 #'
 #' @export
 #'
@@ -208,7 +208,7 @@ boot_compare_methods <- function (sim_data, method1, method2, loss_fun) {
 #'                 This dataset should be created using the `prep_sim_data()` function
 #' @param boot_trials The number of bootstrapped trials to run (default is 100)
 #' @param num_cores The number of worker cores to use. If not specified will determined the number of cores based on the which ever
-#' is the smallest value between number of boot_trials or detected number of cores - 1.
+#' is the smallest value between number of boot_trials or detected number of cores - 1
 #' @param method1 First change point method to compare
 #' @param method2 Second change point method to compare
 #' @param loss_fun The loss function used in the comparison (mean squared error (MSE), root mean squared error (RMSE),
@@ -218,7 +218,7 @@ boot_compare_methods <- function (sim_data, method1, method2, loss_fun) {
 #' linear regression method
 #'
 #' @return A tibble with two columns: 1) the bootstrap trial, 3) results from each trial (each trial contains a nested
-#' tibble with 3 columns: 1) the loss function used, 2) the value for method 1, and 3) the value for method 2).
+#' tibble with 3 columns: 1) the loss function used, 2) the value for method 1, and 3) the value for method 2)
 #'
 #' @examples
 #' #load example final_time_map dataset

@@ -19,7 +19,7 @@ run_cp_bootstrap(
 \item{sim_data}{A dataset containing the time_map, miss bins and other parameters used for the simulation.
 This dataset should be created using the `prep_sim_data()` function}
 
-\item{sim_version}{The simulation version to run. Options include "visits" (default) or "patients".}
+\item{sim_version}{The simulation version to run. Options include "visits" (default) or "patients"}
 
 \item{boot_trials}{The number of bootstrapped trials to run (default is 100)}
 
@@ -28,10 +28,10 @@ This dataset should be created using the `prep_sim_data()` function}
 \item{new_draw_weight}{A weighing parameter used to assign preference to drawing previously "missed" patients
 at each time step. A value of 0 applies strict preference to drawing patients who
 have been assigned to miss in prior time steps, while a value 0.5 applies equal weight
-to patients who have and have not been previously selected.}
+to patients who have and have not been previously selected}
 
 \item{num_cores}{The number of worker cores to use. If not specified will determined the number of cores based on the which ever
-is the smallest value between number of boot_trials or detected number of cores - 1.}
+is the smallest value between number of boot_trials or detected number of cores - 1}
 
 \item{no_bootstrapping}{Specifies whether you want to run the simulations without bootstrapping the original dataset}
 }

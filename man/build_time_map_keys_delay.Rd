@@ -7,12 +7,12 @@
 build_time_map_keys_delay(collect_tab = collect_table(), db_con, db_path)
 }
 \arguments{
-\item{collect_tab}{A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access.
-Default is all possible combinations of setting, source, and year.}
+\item{collect_tab}{A tibble with the specific setting (i.e. inpatient or outpatient), source (i.e. ccae or mdcr), and year to access
+Default is all possible combinations of setting, source, and year}
 
 \item{db_con}{The database connection}
 
-\item{db_path}{Path to the database.}
+\item{db_path}{Path to the database}
 }
 \description{
 Build inpatient and outpatient (also includes ED) key datasets

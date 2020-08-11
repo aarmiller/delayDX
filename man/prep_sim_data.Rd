@@ -11,6 +11,7 @@ prep_sim_data(
   event_name = "any_ssd",
   cp_method = "lm_quad",
   specify_cp = NULL,
+  set_cp_method = NULL,
   eval_criteria = "AIC",
   week_period = FALSE,
   prediction_bound_for_sim = FALSE
@@ -25,10 +26,16 @@ prep_sim_data(
 
 \item{event_name}{The variable name for the event indicator}
 
-\item{cp_method}{The change-point method to fit visit counts}
+\item{cp_method}{The change-point method to fit visit counts (i.e. "lm","lm_quad","lm_cube", "quad", "cube", "exp", "spline", "cusum",
+"pettitt", or "set_cp"). "set_cp" is not a change point detection method, rather it is a method to specify the change point and method used
+to model the data prior to the specified change point}
 
 \item{specify_cp}{Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
-repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)}
+repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
+This is a required argument if cp_method = "set_cp"}
+
+\item{set_cp_method}{The method used to model the data prior to a specified change point for the "set_cp" cp_method
+(i.e. "linear", "quadratic", "cubic", "quartic", "quintic", "sextic", or "exponential")}
 
 \item{eval_criteria}{The evaluation criteria used to find change points, if using a
 linear regression method}
@@ -37,8 +44,27 @@ linear regression method}
 method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation}
 
 \item{prediction_bound_for_sim}{Logical to specify whether or not to use the estimated predicted value or the upper bound 90%
-prediction value in the simulations. The defualt is FALSE which uses the estimated predicited value.}
+prediction value in the simulations. The defualt is FALSE which uses the estimated predicited value}
 }
 \description{
 Prepare data for simulation
+}
+\examples{
+
+## Example to detect change point using cumsum ##
+out <- prep_sim_data(time_map_data, by_days=1, start_day=1, event_name = "any_ssd", cp_method = "cumsum")
+
+## Examples showing different ways to specify a change point ##
+
+# Using a change point detection method (e.g. cumsum or lm_cube), but enforce a specific change point
+cp <- 21
+out <- prep_sim_data(time_map_data, by_days=1, start_day=1, event_name = "any_ssd", cp_method = "cumsum", specify_cp = cp)
+
+# Using the "set_cp" in the cp_method argument to apply a cubic model to the data prior to the change point
+cp <- 21
+out <- prep_sim_data(time_map_data, by_days=1, start_day=1, event_name = "any_ssd", cp_method = "set_cp", specify_cp = cp,
+set_cp_method = "cubic")
+
+
+
 }
