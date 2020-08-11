@@ -139,7 +139,10 @@ build_final_time_map <- function (condition_short_name, duration_prior_to_index 
         mutate(outpatient = ifelse(inpatient == 0 & ED == 0 , 1, 0)) %>%
         mutate(all_visits = 1)
 
-  return(final_time_map)
+  return(list(final_time_map = final_time_map,
+              index_data = index_data,
+              dx_data = dx_data,
+              rx_data = rx_data))
 }
 
 
