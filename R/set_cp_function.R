@@ -120,7 +120,7 @@ set_cp_lm <- function(data, var_name = "n_miss_visits", return_miss_only = FALSE
 
 
   cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
-    ggtitle(paste0("Method = 'lm'", " & day of the week = ", week_period))+
+    ggtitle(paste0("Method = 'lm'", " & week effect  = ", week_period))+
     ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
     geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
       ggplot2::geom_line(size=.8) +
@@ -270,7 +270,7 @@ set_cp_quad <- function(data, var_name = "n_miss_visits", return_miss_only = FAL
 
 
   cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
-    ggtitle(paste0("Method = 'quad'", " & day of the week = ", week_period))+
+    ggtitle(paste0("Method = 'quad'", " & week effect  = ", week_period))+
     ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
     geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
     ggplot2::geom_line(size=.8) +
@@ -426,7 +426,7 @@ set_cp_cubic <- function(data, var_name = "n_miss_visits", return_miss_only = FA
 
 
   cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
-    ggtitle(paste0("Method = 'cubic'", " & day of the week = ", week_period))+
+    ggtitle(paste0("Method = 'cubic'", " & week effect  = ", week_period))+
     ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
     geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
     ggplot2::geom_line(size=.8) +
@@ -588,7 +588,7 @@ set_cp_poly <- function(data, var_name = "n_miss_visits", return_miss_only = FAL
 
 
   cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
-    ggtitle(paste0("Method = ", str_to_title(name_poly_order), " & day of the week = ", week_period))+
+    ggtitle(paste0("Method = ", str_to_title(name_poly_order), " & week effect  = ", week_period))+
     ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
     geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
     ggplot2::geom_line(size=.8) +
@@ -730,7 +730,7 @@ set_cp_exp <- function(data, var_name = "n_miss_visits", return_miss_only = FALS
 
 
   cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
-    ggtitle(paste0("Method = 'Exponential'", " & day of the week = ", week_period))+
+    ggtitle(paste0("Method = 'Exponential'", " & week effect  = ", week_period))+
     ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
     geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
     ggplot2::geom_line(size=.8) +
