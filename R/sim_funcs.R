@@ -151,7 +151,7 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
                      n_vis_out = sum(ed==0 & inpatient==0),
                      n_vis_ed = sum(ed==1),
                      n_vis_inpatient = sum(inpatient==1),
-                     dur = max(-(days_since_dx-(sim_data$start_day-1))))
+                     dur = max(-(days_since_dx)))
 
   # for computing mean and median duration with the 0 visits
   tmp_num_not_drawn <- sim_data$total_patients-nrow(sim_miss_num)
@@ -337,7 +337,7 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
                      n_vis_out = sum(ed==0 & inpatient==0),
                      n_vis_ed = sum(ed==1),
                      n_vis_inpatient = sum(inpatient==1),
-                     dur = max(-(days_since_dx-(sim_data$start_day-1))))
+                     dur = max(-(days_since_dx)))
 
   # for computing mean and median duration with the 0 visits
   tmp_num_not_drawn <- sim_data$total_patients-nrow(sim_miss_num)
@@ -520,7 +520,7 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
       new_sim_data$miss_bins_visits <- miss_bins
 
       # run simulation
-      sim_res_patients <- run_sim_miss_visits(sim_data = new_sim_data,
+      sim_res_results <- run_sim_miss_visits(sim_data = new_sim_data,
                                               trials = n_sim_trials,
                                               sim_duartion_for_regression = sim_duartion_for_regression,
                                               no_bootstrapping = no_bootstrapping,
@@ -571,7 +571,7 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
       new_sim_data$miss_bins_patients <- miss_bins
 
       # run simulation
-      sim_res_patients <- run_sim_miss_patients(sim_data = new_sim_data,
+      sim_res_results <- run_sim_miss_patients(sim_data = new_sim_data,
                                                 trials = n_sim_trials,
                                                 new_draw_weight = new_draw_weight,
                                                 no_bootstrapping = no_bootstrapping,
@@ -582,7 +582,7 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
   results <- list(change_point = sim_cp$change_point,
                   pred = sim_cp$pred,
                   miss_counts = miss_stats,
-                  sim_visit_results = sim_res_patients)
+                  sim_visit_results = sim_res_results)
   return(results)
 }
 
