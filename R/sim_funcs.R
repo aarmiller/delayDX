@@ -168,7 +168,8 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
 
 
   ## build table of dureation of missed visits
-  sim_trial_durration_table <- compute_sim_trial_duration_table(sim_miss_num_data = sim_miss_num)
+  sim_trial_durration_table <- compute_sim_trial_duration_table(sim_miss_num_data = sim_miss_num,
+                                                                upper_bound = sim_data$change_point)
   #sim_trial_durration_table <- NULL
 
   ## Compute summary statistics across all patients ###
@@ -354,7 +355,8 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
 
 
   ## build table of dureation of missed visits
-  sim_trial_durration_table <- compute_sim_trial_duration_table(sim_miss_num_data = sim_miss_num)
+  sim_trial_durration_table <- compute_sim_trial_duration_table(sim_miss_num_data = sim_miss_num,
+                                                                upper_bound = sim_data$change_point)
 
   ## Compute summary statistics across all patients ###
   miss_summary <- sim_miss_num %>%
@@ -518,6 +520,7 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
       new_sim_data <- sim_data
       new_sim_data$time_map <- draw_time_map
       new_sim_data$miss_bins_visits <- miss_bins
+      new_sim_data$change_point <- sim_cp$change_point$period
 
       # run simulation
       sim_res_results <- run_sim_miss_visits(sim_data = new_sim_data,
@@ -569,6 +572,7 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
       new_sim_data <- sim_data
       new_sim_data$time_map <- draw_time_map
       new_sim_data$miss_bins_patients <- miss_bins
+      new_sim_data$change_point <- sim_cp$change_point$period
 
       # run simulation
       sim_res_results <- run_sim_miss_patients(sim_data = new_sim_data,
