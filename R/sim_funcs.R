@@ -502,8 +502,10 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
       # update miss bins to reflect predicted value or upper bound prediction interval
       if (sim_data$prediction_bound_for_sim == FALSE){
 
-        miss_bins <- miss_bins %>% select(-lower_int_pred1, -upper_int_pred1,
-                                         -num_miss_upper_int)
+        miss_bins <- miss_bins %>% select(period, Y,
+                                          pred1, pred,
+                                          num_miss)
+
       } else {
         miss_bins <- miss_bins %>% select(period, Y,
                                            pred1 = upper_int_pred1,
@@ -553,8 +555,10 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
       # update miss bins to reflect predicted value or upper bound prediction interval
       if (sim_data$prediction_bound_for_sim == FALSE){
 
-        miss_bins <- miss_bins %>% select(-lower_int_pred1, -upper_int_pred1,
-                                          -num_miss_upper_int)
+        miss_bins <- miss_bins %>% select(period, Y,
+                                          pred1, pred,
+                                          num_miss)
+
       } else {
         miss_bins <- miss_bins %>% select(period, Y,
                                           pred1 = upper_int_pred1,
