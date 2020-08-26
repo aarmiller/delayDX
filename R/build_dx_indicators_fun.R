@@ -128,20 +128,27 @@ gether_dx_keys_delay <- function (collect_tab = collect_table(), dx_list, db_pat
 #' Default is all possible combinations of setting, source, and year
 #' @param num_cores The number of worker cores to use. If not specified will determined the number of cores based on the which ever
 #' is the smallest value between number of rows in for collect_tab or detected number of cores - 1
+#' @param return_keys_only Logical to return only the  visit keys containing specific diagnosis codes.
 #' @return A tibble with visit keys and indicators for the diagnosis codes categories supplied to the condition_dx_list argument
 #' @export
 #'
 
-build_dx_indicators_delay <- function (condition_dx_list, db_con, db_path, collect_tab = collect_table(), num_cores = NULL) {
+build_dx_indicators_delay <- function (condition_dx_list, db_con, db_path, collect_tab = collect_table(), num_cores = NULL,
+                                       return_keys_only = FALSE) {
   if (!any(dplyr::src_tbls(db_con) %in% c("outpatient_keys",
                                           "inpatient_keys"))) {
     warning("Database contains no visit keys. Temporary visit keys were generated using the collection table specified.")
     add_time_map_keys(collect_tab = collect_tab, db_con = db_con,
                       temporary = TRUE)
   }
+
+  if (return_keys_only == FALSE){
   all_cond_codes <- list(icd9_codes = purrr::map(condition_dx_list,
                                                  ~.$icd9_codes) %>% unlist(use.names = F),
                          icd10_codes = purrr::map(condition_dx_list, ~.$icd10_codes) %>% unlist(use.names = F))
+  } else {
+    all_cond_codes <- condition_dx_list
+  }
 
   inpatient_keys <- db_con %>% dplyr::tbl("inpatient_keys") %>%
     dplyr::collect(n = Inf)
@@ -183,6 +190,11 @@ build_dx_indicators_delay <- function (condition_dx_list, db_con, db_path, colle
     x <- tmp[[i]]
     cond_keys <- bind_rows(cond_keys, x)
   }
+
+  if (return_keys_only == TRUE){
+    return(cond_keys)
+  }
+
   cond_keys_name <- tibble::tibble(name = names(condition_dx_list)) %>%
     dplyr::mutate(dx = purrr::map(.data$name, ~condition_dx_list[[.]] %>%
                                     unlist())) %>% tidyr::unnest() %>% dplyr::inner_join(cond_keys,
