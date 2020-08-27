@@ -9,7 +9,8 @@ build_dx_indicators_delay(
   db_con,
   db_path,
   collect_tab = collect_table(),
-  num_cores = NULL
+  num_cores = NULL,
+  return_keys_only = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ Default is all possible combinations of setting, source, and year}
 
 \item{num_cores}{The number of worker cores to use. If not specified will determined the number of cores based on the which ever
 is the smallest value between number of rows in for collect_tab or detected number of cores - 1}
+
+\item{return_keys_only}{Logical to return only the  visit keys containing specific diagnosis codes}
 }
 \value{
 A tibble with visit keys and indicators for the diagnosis codes categories supplied to the condition_dx_list argument

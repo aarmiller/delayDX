@@ -128,7 +128,7 @@ gether_dx_keys_delay <- function (collect_tab = collect_table(), dx_list, db_pat
 #' Default is all possible combinations of setting, source, and year
 #' @param num_cores The number of worker cores to use. If not specified will determined the number of cores based on the which ever
 #' is the smallest value between number of rows in for collect_tab or detected number of cores - 1
-#' @param return_keys_only Logical to return only the  visit keys containing specific diagnosis codes.
+#' @param return_keys_only Logical to return only the  visit keys containing specific diagnosis codes
 #' @return A tibble with visit keys and indicators for the diagnosis codes categories supplied to the condition_dx_list argument
 #' @export
 #'
