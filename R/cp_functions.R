@@ -593,7 +593,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
     dplyr::select(Y,t,period)
 
   cp_plot <- out$pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
-    ggtitle(paste0("Change point method =", method)) +
+    ggtitle(paste0("Change point method = ", method)) +
     ggplot2::geom_line(aes(y = pred1), color = "red", size=.8) +
     ggplot2::geom_line(size=.8) +
     ggplot2::geom_point(aes(t,Y), size=.8) +
