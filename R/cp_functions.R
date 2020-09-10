@@ -285,20 +285,16 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
                      num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
                      num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"])
 
-  if (is.null(specify_cp)){
-    #Generate a plot
-    cp_plot <- pred %>% ggplot2::ggplot(aes(t, pred)) + ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
-      ggplot2::geom_line(size=.8) +
-      ggplot2::geom_point(aes(t,Y),size=.8) +
-      ggplot2::theme_light() +
-      ggplot2::geom_vline(xintercept = pettitt.test(t_series)$estimate[[1]], color="blue", size=.8)
-  } else {
-    cp_plot <- pred %>% ggplot2::ggplot(aes(t, pred)) + ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
-      ggplot2::geom_line(size=.8) +
-      ggplot2::geom_point(aes(t,Y),size=.8) +
-      ggplot2::theme_light() +
-      ggplot2::geom_vline(xintercept = change_point$t, color="blue", size=.8)
-  }
+
+  cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
+    ggtitle(paste0("Change point method = Pettitt & week effect = ", week_period))+
+    ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
+    geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
+    ggplot2::geom_line(size=.8) +
+    ggplot2::geom_point(aes(t,Y),size=.8) +
+    ggplot2::theme_light() +
+    ggplot2::geom_vline(xintercept = change_point$period*-1 , color="blue", size=.8)
+
 
   #Compile output
   cp_out <- list(miss_bins=miss_bins,
@@ -431,20 +427,16 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
                      num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"])
 
 
-  if (is.null(specify_cp)){
-    #Generate a plot
-    cp_plot <- pred %>% ggplot2::ggplot(aes(t, pred)) + ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
-      ggplot2::geom_line(size=.8) +
-      ggplot2::geom_point(aes(t,Y),size=.8) +
-      ggplot2::theme_light() +
-      ggplot2::geom_vline(xintercept = cp_est, color="blue", size=.8)
-  } else {
-    cp_plot <- pred %>% ggplot2::ggplot(aes(t, pred)) + ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
-      ggplot2::geom_line(size=.8) +
-      ggplot2::geom_point(aes(t,Y),size=.8) +
-      ggplot2::theme_light() +
-      ggplot2::geom_vline(xintercept = change_point$t, color="blue", size=.8)
-  }
+  cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
+    ggtitle(paste0("Change point method = CUSUM & week effect = ", week_period))+
+    ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
+    geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
+    ggplot2::geom_line(size=.8) +
+    ggplot2::geom_point(aes(t,Y),size=.8) +
+    ggplot2::theme_light() +
+    ggplot2::geom_vline(xintercept = change_point$period*-1 , color="blue", size=.8)
+
+
   #Compile output
   cp_out <- list(miss_bins=miss_bins,
                  change_point=change_point,
@@ -595,18 +587,20 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
     out <- fit_cp_exp(data = data, x=change_t,return_all = TRUE)
   }
 
-  cp_plot <- out$pred %>%
-    ggplot2::ggplot(aes(t,pred)) +
-    ggplot2::geom_line(aes(y=pred1),color="red") +
-    ggplot2::geom_line() +
-    ggplot2::geom_point(aes(t,Y)) +
-    ggplot2::geom_ribbon(aes(x=t,ymin = pred_low, ymax = pred_high),
-                         fill = "steelblue2", alpha = 0.3, inherit.aes = FALSE) +
-    ggplot2::theme_light()
 
   change_point <- data %>%
     dplyr::filter(t==change_t) %>%
     dplyr::select(Y,t,period)
+
+  cp_plot <- out$pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
+    ggtitle(paste0("Change point method =", method)) +
+    ggplot2::geom_line(aes(y = pred1), color = "red", size=.8) +
+    ggplot2::geom_line(size=.8) +
+    ggplot2::geom_point(aes(t,Y), size=.8) +
+    ggplot2::theme_light() +
+    ggplot2::geom_vline(xintercept = change_point$period*-1 , color="blue", size=.8) +
+    ggplot2::geom_ribbon(aes(x=t, ymin = pred_low, ymax = pred_high),
+                         fill = "red", alpha = 0.2, inherit.aes = FALSE)
 
   miss_bins <- out$pred  %>%
     dplyr::mutate(num_miss=pred-pred1) %>%
