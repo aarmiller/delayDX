@@ -21,7 +21,8 @@ find_change_point(
 \item{var_name}{The name of the count variable to find the change-point for}
 
 \item{method}{The method used to find changepoint. Options include "lm",
-"lm_quad", "lm_cube", "quad", "cube", "exp", "spline", "pettitt", "cusum"}
+"lm_quad", "lm_cube", "quad", "cube", "exp", "spline", "pettitt", "cusum",
+"MSE", "RMSE", "MAE", "MSLE", "RMSLE"}
 
 \item{eval_criteria}{The evaluation criteria used to find change points, if using a
 linear regression method}

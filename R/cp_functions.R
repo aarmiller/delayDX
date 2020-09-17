@@ -636,7 +636,8 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
 #' @param data A dataset of visit counts, output by count_prior_events_truven
 #' @param var_name The name of the count variable to find the change-point for
 #' @param method The method used to find changepoint. Options include "lm",
-#' "lm_quad", "lm_cube", "quad", "cube", "exp", "spline", "pettitt", "cusum"
+#' "lm_quad", "lm_cube", "quad", "cube", "exp", "spline", "pettitt", "cusum",
+#' "MSE", "RMSE", "MAE", "MSLE", "RMSLE"
 #' @param eval_criteria The evaluation criteria used to find change points, if using a
 #' linear regression method
 #' @param week_period Logical to incorporate a "day of the week" effect into the linear model, if
