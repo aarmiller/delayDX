@@ -138,7 +138,7 @@ build_dx_indicators_delay <- function (condition_dx_list, db_con, db_path, colle
   if (!any(dplyr::src_tbls(db_con) %in% c("outpatient_keys",
                                           "inpatient_keys"))) {
     warning("Database contains no visit keys. Temporary visit keys were generated using the collection table specified.")
-    add_time_map_keys(collect_tab = collect_tab, db_con = db_con,
+    add_time_map_keys_delay(collect_tab = collect_tab, db_con = db_con, db_path = db_path,
                       temporary = TRUE)
   }
 
