@@ -53,17 +53,21 @@ gether_dx_keys_delay <- function (collect_tab = collect_table(), dx_list, db_pat
     rm(in_temp1, in_temp2)
     }
 
-    in_temp <- in_temp%>%
-    dplyr::select(-.data$setting) %>% tidyr::unnest() %>%
-    dplyr::group_by(source, .data$year) %>% tidyr::nest()
+    if (nrow(in_temp %>% tidyr::unnest()) > 0){
+      in_temp <- in_temp%>%
+      dplyr::select(-.data$setting) %>% tidyr::unnest() %>%
+      dplyr::group_by(source, .data$year) %>% tidyr::nest()
 
-    dx_keys <- inpatient_keys %>% dplyr::mutate(enrolid = as.integer(.data$enrolid)) %>%
-      dplyr::select(.data$ccae, .data$year, .data$caseid, .data$key) %>%
-      dplyr::inner_join(in_temp %>% dplyr::mutate(ccae = ifelse(source ==
-                                                                  "ccae", 1L, 0L)) %>% tidyr::unnest(), by = c("ccae",
-                                                                                                               "year", "caseid")) %>% dplyr::select(.data$dx, .data$key)
-    dx_keys <- dx_keys %>%
-      dplyr::distinct()
+      dx_keys <- inpatient_keys %>% dplyr::mutate(enrolid = as.integer(.data$enrolid)) %>%
+        dplyr::select(.data$ccae, .data$year, .data$caseid, .data$key) %>%
+        dplyr::inner_join(in_temp %>% dplyr::mutate(ccae = ifelse(source ==
+                                                                    "ccae", 1L, 0L)) %>% tidyr::unnest(), by = c("ccae",
+                                                                                                                 "year", "caseid")) %>% dplyr::select(.data$dx, .data$key)
+      dx_keys <- dx_keys %>%
+        dplyr::distinct()
+    } else {
+      dx_keys <- NULL
+    }
   }
   if(collect_tab$setting == "outpatient"){
     if(as.integer(collect_tab$year) < 15){
@@ -101,18 +105,23 @@ gether_dx_keys_delay <- function (collect_tab = collect_table(), dx_list, db_pat
     out_temp <- dplyr::bind_rows(out_temp1, out_temp2)
     rm(out_temp1, out_temp2)
     }
-    out_temp <- out_temp%>%
-    dplyr::select(-.data$setting) %>% tidyr::unnest() %>%
-    dplyr::group_by(source, .data$year) %>% tidyr::nest()
 
-    dx_keys <- outpatient_keys  %>% dplyr::mutate(enrolid = as.integer(.data$enrolid)) %>%
-      dplyr::select(.data$enrolid, .data$stdplac, .data$svcdate,
-                    .data$key) %>% dplyr::inner_join(out_temp %>% dplyr::select(.data$data) %>%
-                                                       tidyr::unnest(), by = c("enrolid", "stdplac", "svcdate")) %>%
-      dplyr::select(.data$key, .data$dx)
+    if (nrow(out_temp %>% tidyr::unnest()) > 0){
+      out_temp <- out_temp%>%
+      dplyr::select(-.data$setting) %>% tidyr::unnest() %>%
+      dplyr::group_by(source, .data$year) %>% tidyr::nest()
 
-    dx_keys <- dx_keys %>%
-      dplyr::distinct()
+      dx_keys <- outpatient_keys  %>% dplyr::mutate(enrolid = as.integer(.data$enrolid)) %>%
+        dplyr::select(.data$enrolid, .data$stdplac, .data$svcdate,
+                      .data$key) %>% dplyr::inner_join(out_temp %>% dplyr::select(.data$data) %>%
+                                                         tidyr::unnest(), by = c("enrolid", "stdplac", "svcdate")) %>%
+        dplyr::select(.data$key, .data$dx)
+
+      dx_keys <- dx_keys %>%
+        dplyr::distinct()
+    } else {
+      dx_keys <- NULL
+    }
   }
   return(dx_keys)
 }
@@ -188,7 +197,9 @@ build_dx_indicators_delay <- function (condition_dx_list, db_con, db_path, colle
   cond_keys <- tibble()
   for (i in 1:length(tmp)){
     x <- tmp[[i]]
-    cond_keys <- bind_rows(cond_keys, x)
+    if (!is.null(x)){
+      cond_keys <- bind_rows(cond_keys, x)
+    }
   }
 
   if (return_keys_only == TRUE){
