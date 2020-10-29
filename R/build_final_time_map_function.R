@@ -20,40 +20,6 @@
 build_final_time_map <- function (condition_short_name, duration_prior_to_index = 365L,
                                   cohort_path, ssd_list){
 
-  #grant projects
-  project_list <- readRDS("/Shared/Statepi_Diagnosis/grant_projects/project_log/project_list.RDS")
-  project_list1 <- read_csv("/Shared/Statepi_Diagnosis/grant_projects/project_log/project_list.csv")
-  grant <- rbind(project_list %>% select(-description), project_list1)
-
-  # load datasets
-  if (condition_short_name %in% grant$short_name){
-    #db path
-    db_path <- paste0("/Shared/Statepi_Diagnosis/grant_projects/", condition_short_name, "/data/truven/", condition_short_name,".db")
-    #db connection
-    db_con<- src_sqlite( paste0("/Shared/Statepi_Diagnosis/grant_projects/", condition_short_name, "/data/truven/", condition_short_name,".db"))
-    #load data
-    #get all dx data
-    all_dx <- readRDS(paste0("/Shared/Statepi_Diagnosis/grant_projects/", condition_short_name, "/data/truven/", condition_short_name, "_all_dx_visits.RDS"))
-    #get all rx data
-    all_rx <- readRDS(paste0("/Shared/Statepi_Diagnosis/grant_projects/", condition_short_name, "/data/truven/", condition_short_name, "_all_rx.RDS"))
-    #get enrolids and index data info
-    index_data <- readRDS(paste0("/Shared/Statepi_Diagnosis/grant_projects/", condition_short_name, "/data/truven/", condition_short_name, "_index_dates.RDS"))
-
-  } else {
-    #db path
-    db_path <- paste0("/Shared/Statepi_Diagnosis/collab_projects/", condition_short_name, "/data/truven/", condition_short_name,".db")
-    #db connection
-    db_con<- src_sqlite( paste0("/Shared/Statepi_Diagnosis/collab_projects/", condition_short_name, "/data/truven/", condition_short_name,".db"))
-    #load data
-    #get all dx data
-    all_dx <- readRDS(paste0("/Shared/Statepi_Diagnosis/collab_projects/", condition_short_name, "/data/truven/", condition_short_name, "_all_dx_visits.RDS"))
-    #get all dx data
-    all_rx <- readRDS(paste0("/Shared/Statepi_Diagnosis/collab_projects/", condition_short_name, "/data/truven/", condition_short_name, "_all_rx.RDS"))
-    #get enrolids and index data info
-    index_data <- readRDS(paste0("/Shared/Statepi_Diagnosis/collab_projects/", condition_short_name, "/data/truven/", condition_short_name, "_index_dates.RDS"))
-
-  }
-
     #update all_dx to include dx date instead of time to dx (this is necessary as index dates are shifted do time to dx needs to be recalculated)
     all_dx <- all_dx  %>%
     inner_join(index_data %>% select(enrolid, index_date)) %>%
