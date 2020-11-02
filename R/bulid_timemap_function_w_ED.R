@@ -217,7 +217,7 @@ build_time_map_keys_delay <-
                                                          (revcode %in% c("450","451","452","453","454",
                                                                          "455","456","457","458","459")) |
                                                          (proc1 %in% c("99281","99282","99283","99284","99285"))), "ED", "outpatient")) %>%
-        select(year, ccae, enrolid, admdate, disdate, source, stdplac, inpatient)
+        dplyr::select(year, ccae, enrolid, admdate, disdate, source, stdplac, inpatient)
     }
     else {
       temp.out <- tibble::tibble(year = character(), ccae = integer(),
