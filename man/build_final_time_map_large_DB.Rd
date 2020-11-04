@@ -2,11 +2,12 @@
 % Please edit documentation in R/build_final_time_map_function_large_DB.R
 \name{build_final_time_map_large_DB}
 \alias{build_final_time_map_large_DB}
-\title{Builds a time map containing visit specific information for a specific condition and cohort for Large databases.}
+\title{Builds a time map containing visit specific information for a specific condition and cohort for large databases.}
 \usage{
 build_final_time_map_large_DB(
   condition_short_name,
   duration_prior_to_index = 365L,
+  time_map,
   cohort_path,
   ssd_list
 )
@@ -15,6 +16,8 @@ build_final_time_map_large_DB(
 \item{condition_short_name}{The condition of interest. Specifically the short_name version of the condition}
 
 \item{duration_prior_to_index}{How far from the index should the time map extend back (e.g. 90, 180, 365)}
+
+\item{time_map}{The time_map to which the indicators will be added to}
 
 \item{cohort_path}{Path to the specific cohort for the condition of interest}
 
@@ -26,7 +29,7 @@ ICD 10 specific codes, with list elements labled as icd9_codes and icd10_codes}
 A tibble with all the specified diagnosis codes and the corresponding visit key where the diagnosis codes appeared
 }
 \description{
-Builds a time map containing visit specific information for a specific condition and cohort for Large databases.
+Builds a time map containing visit specific information for a specific condition and cohort for large databases.
 }
 \examples{
 ssds <- read_rds("/Shared/Statepi_Diagnosis/params/ssd_codes/ssd_hsv_enceph.RDS")
