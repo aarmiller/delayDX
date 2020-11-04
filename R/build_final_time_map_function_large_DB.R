@@ -1,7 +1,8 @@
-#' Builds a time map containing visit specific information for a specific condition and cohort for Large databases.
+#' Builds a time map containing visit specific information for a specific condition and cohort for large databases.
 #' @name build_final_time_map_large_DB
 #' @param condition_short_name The condition of interest. Specifically the short_name version of the condition
 #' @param duration_prior_to_index How far from the index should the time map extend back (e.g. 90, 180, 365)
+#' @param time_map The time_map to which the indicators will be added to
 #' @param cohort_path Path to the specific cohort for the condition of interest
 #' @param ssd_list A list of diagnosis codes of interest. The diagnosis codes need to be seperated into
 #' diagnosis categories (e.g. cough, fever, etc.). Additionally, within the categories, diagnosis codes should be seperated into ICD 9 and
@@ -17,7 +18,7 @@
 #' @export
 #'
 
-build_final_time_map_large_DB <- function (condition_short_name, duration_prior_to_index = 365L,
+build_final_time_map_large_DB <- function (condition_short_name, duration_prior_to_index = 365L, time_map,
                                   cohort_path, ssd_list){
 
     #update all_dx to include dx date instead of time to dx (this is necessary as index dates are shifted do time to dx needs to be recalculated)
@@ -48,9 +49,6 @@ build_final_time_map_large_DB <- function (condition_short_name, duration_prior_
       mutate(days_since_rx = rx_date - index_date) %>%
       filter(between(days_since_rx,-duration_prior_to_index,0)) %>% select(enrolid, rx, days_since_rx)
 
-    # build timemap
-    time_map <- build_time_map_delay(db_con = db_con, db_path = db_path)
-    gc()
 
     # subset TB timemap to cases of interest
     time_map <- time_map %>% inner_join(index_data %>%
