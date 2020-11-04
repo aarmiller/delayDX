@@ -34,8 +34,9 @@ Builds a time map containing visit specific information for a specific condition
 \examples{
 ssds <- read_rds("/Shared/Statepi_Diagnosis/params/ssd_codes/ssd_hsv_enceph.RDS")
 
-final_time_map <- build_final_time_map(condition_short_name = "hsv_enceph",
-                                       duration_prior_to_index = 365L,
-                                       cohort_path = "/Shared/Statepi_Diagnosis/grant_projects/hsv_enceph/scripts/validation/enrolled_ge_365/updated_index_cohort.RDS",
-                                       ssd_list = ssds)
+final_time_map <- build_final_time_map_large_DB(condition_short_name = "hsv_enceph",
+                                                duration_prior_to_index = 365L,
+                                                time_map = time_map,
+                                                cohort_path = "/Shared/Statepi_Diagnosis/grant_projects/hsv_enceph/scripts/validation/enrolled_ge_365/updated_index_cohort.RDS",
+                                                ssd_list = ssds)
 }
