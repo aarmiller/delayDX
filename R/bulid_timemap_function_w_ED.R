@@ -26,6 +26,8 @@ collect_table <- function (settings = c("inpatient", "outpatient"),
 #' Default is all possible combinations of setting, source, and year
 #' @param db_con The database connection
 #' @param db_path Path to the database
+#' @param temporary Logical to add outpatient_keys and inpatient_keys temporarily to the database. Default is TRUE. For big databases set this to FALSE.
+#' @param overwrite Logical to overwrite the existing outpatient_keys and inpatient_keys. Default is FALSE. For big databases set this to TRUE.
 #' @return A tibble with a time map containing visit level information from the database. Includes admission date, year, setting, enrolid,
 #' standard place of care, key, discharge date, and location of care (i.e. inpatient, outpatient, or ED)
 #' @export
@@ -33,13 +35,14 @@ collect_table <- function (settings = c("inpatient", "outpatient"),
 
 require(parallel)
 
-build_time_map_delay <- function (db_con, db_path, collect_tab = collect_table())
+build_time_map_delay <- function (db_con, db_path, collect_tab = collect_table(),
+                                  temporary = TRUE, overwrite = FALSE)
 {
   if (!any(dplyr::src_tbls(db_con) %in% c("outpatient_keys",
                                           "inpatient_keys"))) {
     warning("Database contains no visit keys. Temporary visit keys were generated using the collection table specified.")
     add_time_map_keys_delay(collect_tab = collect_table(), db_con = db_con, db_path = db_path,
-                       temporary = TRUE)
+                       temporary = temporary, overwrite = overwrite)
   }
   dat <- bind_rows(db_con %>% dplyr::tbl("outpatient_keys") %>%
                  dplyr::collect(n = Inf) %>% dplyr::mutate(disdate = .data$svcdate) %>% dplyr::select(admdate = "svcdate", everything()),
