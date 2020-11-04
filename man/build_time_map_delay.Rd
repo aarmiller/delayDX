@@ -10,6 +10,10 @@ Default is all possible combinations of setting, source, and year}
 \item{db_con}{The database connection}
 
 \item{db_path}{Path to the database}
+
+\item{temporary}{Logical to add outpatient_keys and inpatient_keys temporarily to the database. Default is TRUE. For big databases set this to FALSE.}
+
+\item{overwrite}{Logical to overwrite the existing outpatient_keys and inpatient_keys. Default is FALSE. For big databases set this to TRUE.}
 }
 \value{
 A tibble with a time map containing visit level information from the database. Includes admission date, year, setting, enrolid,
