@@ -15,4 +15,5 @@
 #usethis::use_package("lubridate")
 #usethis::use_package("trend")
 #usethis::use_package("changepoint")
+#usethis::use_package("forecast")
 #usethis::use_pipe()
