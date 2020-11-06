@@ -184,10 +184,12 @@ find_cp_loss_fun <- function(data, var_name = "n_miss_visits", return_miss_only 
 #' @param return_miss_only Logical to only return miss information
 #' @param week_period Logical to incorporate a "day of the week" effect into
 #' the linear model. Note this is only sensible for one-day period aggregation.
-#' @return A list containing miss information, changepoint information, predictions,
-#' the model itself, and a plot of the middle finger curve and model.
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
+#' @param auto_reg Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
+#' Will automatically fit periodicity, automatically setting week_period to TRUE
+#' @return A list containing miss information, changepoint information, predictions,
+#' the model itself, and a plot of the middle finger curve and model.
 #' @examples
 #' cp_result_pettit <- final_time_map %>%
 #' filter(days_since_dx >= -180) %>%
@@ -195,7 +197,7 @@ find_cp_loss_fun <- function(data, var_name = "n_miss_visits", return_miss_only 
 #' find_cp_pettitt(var_name = "n_miss_visits", return_miss_only = FALSE, week_period=TRUE)
 #' @export
 find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only = FALSE,
-                            week_period=FALSE, specify_cp = NULL){
+                            week_period=FALSE, specify_cp = NULL, auto_reg = FALSE){
 
   #Require some necessary packages
   require(trend)
@@ -224,22 +226,49 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   model_data <- cp_out %>% filter(period > cp) %>% mutate(period_neg=-1*period) %>%
     mutate(week_period = as.factor(period %% 7))
 
-  #Fit model, different if request periodicity
-  if(week_period){
-  model <- lm(var_name ~ period_neg + week_period, data=model_data)
-  } else{
-  model <- lm(var_name ~ period_neg, data=model_data)
-  }
+  #Fit model, different if request periodicity or autoregressive
 
-  #Get prediction covariates and make predictions
-  if(week_period){
-    pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>%
-      mutate(week_period = as.factor(period %% 7)) %>% select(var_name,period_neg,week_period)
-  } else{
-  pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>% select(var_name,period_neg)
-  }
+  if(auto_reg){
+    week_period <- TRUE
+    #Convert to time series object
+    t_series <- ts(model_data$var_name, #start = min(-1*model_data$period),
+                   frequency = 7)
+    #See how far out we need to go in forecasting
+    h <- nrow(cp_out) - nrow(model_data)
 
-  model_pred_intervals <- predict.lm(model, pred_vars, interval = "prediction", level = 0.90)
+    #Fit Arima model
+    model <- Arima(t_series, c(1,1,1), seasonal = list(order = c(1,1,1)))
+    #Get forecast
+    pred <- forecast(model, h=h, level = .9)
+    pred_mean <- c(pred$x,pred$mean)
+    pred_upper <- c(pred$x,pred$upper)
+    pred_lower <- c(pred$x,pred$lower)
+
+
+
+  } else{
+    if(week_period){
+      model <- lm(var_name ~ period_neg + week_period, data=model_data)
+    } else{
+      model <- lm(var_name ~ period_neg, data=model_data)
+    }
+
+    #Get prediction covariates and make predictions
+    if(week_period){
+      pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>%
+        mutate(week_period = as.factor(period %% 7)) %>% select(var_name,period_neg,week_period)
+    } else{
+      pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>% select(var_name,period_neg)
+    }
+
+    model_pred_intervals <- predict.lm(model, pred_vars, interval = "prediction", level = 0.90)
+
+    #Extract data
+    pred_mean <- model_pred_intervals[, "fit"]
+    pred_lower <- model_pred_intervals[, "lwr"]
+    pred_upper <- model_pred_intervals[, "upr"]
+
+  }
 
   #Collect all data needed for cp_out in this function
 
@@ -247,153 +276,12 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   #floored at 0
   miss_bins <- data.frame(period=cp_out$period,
                           Y=cp_out$var_name,
-                          pred1= model_pred_intervals[, "fit"],
-                          lower_int_pred1 = model_pred_intervals[, "lwr"],
-                          upper_int_pred1 = model_pred_intervals[, "upr"],
+                          pred1= pred_mean,
+                          lower_int_pred1 = pred_lower,
+                          upper_int_pred1 = pred_upper,
                           pred=cp_out$var_name,
-                          num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
-                          num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"]) %>%
-    mutate(num_miss = num_miss*(num_miss>=0)) %>%
-    mutate(num_miss_upper_int = num_miss_upper_int*(num_miss_upper_int>=0))
-
-  #Filter to only times beyond CP
-  miss_bins <- miss_bins %>% filter(period<=cp)
-  if (return_miss_only){
-    return(miss_bins)
-  }
-
-  if (is.null(specify_cp)){
-    #Output data about the changepoint itself
-    change_point <- data.frame(Y = cp_out$var_name[pettitt.test(t_series)$estimate[[1]]],
-                               t = pettitt.test(t_series)$estimate[[1]],
-                               period = cp)
-  } else {
-    #Output data about the changepoint itself
-    change_point <- data.frame(Y = cp_out %>% filter(period == cp) %>% .$var_name,
-                               t = which(cp_out$period == cp),
-                               period = cp)
-  }
-
-  #Output data about predictions
-  pred <- data.frame(period=cp_out$period,
-                     Y=cp_out$var_name,
-                     t = 1:nrow(cp_out),
-                     pred1= model_pred_intervals[, "fit"],
-                     lower_int_pred1 = model_pred_intervals[, "lwr"],
-                     upper_int_pred1 = model_pred_intervals[, "upr"],
-                     pred=cp_out$var_name,
-                     num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
-                     num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"])
-
-
-  cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
-    ggtitle(paste0("Change point method = Pettitt & week effect = ", week_period))+
-    ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
-    geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
-    ggplot2::geom_line(size=.8) +
-    ggplot2::geom_point(aes(t,Y),size=.8) +
-    ggplot2::theme_light() +
-    ggplot2::geom_vline(xintercept = change_point$period*-1 , color="blue", size=.8)
-
-
-  #Compile output
-  cp_out <- list(miss_bins=miss_bins,
-                 change_point=change_point,
-                 pred=pred,
-                 model=model,
-                 cp_plot=cp_plot)
-
-
-  return(cp_out)
-
-}
-
-
-#A function to identify the changepoint using the CUSUM method. Requires:
-#data: an output of count_prior_events_truven
-#var_name: a character string of the var we are modeling for
-#return_miss_only: a logical to only return miss visit counts
-#week_period: a logical to fit the linear before model with factors for days until index mod 7,
-#i.e. to have a crude form of week periodicity
-
-
-#' Identify changepoint using CUSUM method, and find expected SSD visits/calculate misses
-#' by fitting a linear model before the changepoint
-#'
-#' @param data A dataframe output by count_prior_events_truven
-#' @param var_name A character string of outcome for which to apply analysis
-#' @param return_miss_only Logical to only return miss information
-#' @param week_period Logical to incorporate a "day of the week" effect into
-#' the linear model. Note this is only sensible for one-day period aggregation.
-#' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
-#' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
-#' @return A list containing miss information, changepoint information, predictions,
-#' the model itself, and a plot of the middle finger curve and model.
-#' @examples
-#' cp_result_cusum <- final_time_map %>%
-#' filter(days_since_dx >= -180) %>%
-#' count_prior_events_truven(event_name = "any_ssd", start_day = 1, by_days = 1) %>%
-#' find_cp_cusum(var_name = "n_miss_visits", return_miss_only = FALSE, week_period=TRUE)
-#' @export
-find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = FALSE,
-                            week_period=FALSE, specify_cp = NULL){
-
-  #Require some necessary packages
-  require(trend)
-  require(changepoint)
-  require(tidyverse)
-
-  #Reorder data for easy time series usage
-  cp_out <- arrange(data, -period)
-
-  #Create a dummy column that is variable of interest
-  cp_out$var_name <- cp_out[[var_name]]
-
-  #Convert to a time series object
-  t_series <- ts(cp_out$var_name, start = min(-1*cp_out$period),
-                 frequency = 1)
-
-  if (is.null(specify_cp)){
-  #Identify CP and find which period it corresponds to
-    cp_est <- suppressWarnings( cpts(cpt.mean(t_series,pen.value=1,penalty='None',test.stat='CUSUM')) )
-    cp <- cp_out$period[cp_est]
-  } else {
-    cp <- specify_cp
-  }
-
-  #Extract data for the model, all periods after cp
-  model_data <- cp_out %>% filter(period > cp) %>% mutate(period_neg=-1*period) %>%
-    mutate(week_period = as.factor(period %% 7))
-
-  #Fit model, different if request periodicity
-  if(week_period){
-    model <- lm(var_name ~ period_neg + week_period, data=model_data)
-  } else{
-    model <- lm(var_name ~ period_neg, data=model_data)
-  }
-
-  #Get prediction covariates and make predictions
-  if(week_period){
-    pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>%
-      mutate(week_period = as.factor(period %% 7)) %>% select(var_name,period_neg,week_period)
-  } else{
-    pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>% select(var_name,period_neg)
-  }
-
-  model_pred_intervals <- predict.lm(model, pred_vars, interval = "prediction", level = 0.90)
-
-  #Collect all data needed for cp_out in this function
-
-  #First get miss bins and statistics. Hard code num_miss and num_miss_upper_int to be
-  #floored at 0
-  miss_bins <- data.frame(period=cp_out$period,
-                          Y=cp_out$var_name,
-                          pred1= model_pred_intervals[, "fit"],
-                          lower_int_pred1 = model_pred_intervals[, "lwr"],
-                          upper_int_pred1 = model_pred_intervals[, "upr"],
-                          pred=cp_out$var_name,
-                          num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
-                          num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"]) %>%
+                          num_miss = cp_out$var_name - pred_mean,
+                          num_miss_upper_int = cp_out$var_name - pred_upper) %>%
     mutate(num_miss = num_miss*(num_miss>=0)) %>%
     mutate(num_miss_upper_int = num_miss_upper_int*(num_miss_upper_int>=0))
 
@@ -419,16 +307,187 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
   pred <- data.frame(period=cp_out$period,
                      Y=cp_out$var_name,
                      t = 1:nrow(cp_out),
-                     pred1= model_pred_intervals[, "fit"],
-                     lower_int_pred1 = model_pred_intervals[, "lwr"],
-                     upper_int_pred1 = model_pred_intervals[, "upr"],
+                     pred1= pred_mean,
+                     lower_int_pred1 = pred_lower,
+                     upper_int_pred1 = pred_upper,
                      pred=cp_out$var_name,
-                     num_miss = cp_out$var_name - model_pred_intervals[, "fit"],
-                     num_miss_upper_int = cp_out$var_name - model_pred_intervals[, "upr"])
+                     num_miss = cp_out$var_name - pred_mean,
+                     num_miss_upper_int = cp_out$var_name - pred_upper)
 
 
   cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
-    ggtitle(paste0("Change point method = CUSUM & week effect = ", week_period))+
+    ggtitle(paste0("Method = Pettitt, week effect = ", week_period,", auto_reg=",auto_reg))+
+    ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
+    geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
+    ggplot2::geom_line(size=.8) +
+    ggplot2::geom_point(aes(t,Y),size=.8) +
+    ggplot2::theme_light() +
+    ggplot2::geom_vline(xintercept = change_point$period*-1 , color="blue", size=.8)
+
+
+  #Compile output
+  cp_out <- list(miss_bins=miss_bins,
+                 change_point=change_point,
+                 pred=pred,
+                 model=model,
+                 cp_plot=cp_plot)
+
+  return(cp_out)
+
+
+}
+
+
+#A function to identify the changepoint using the CUSUM method. Requires:
+#data: an output of count_prior_events_truven
+#var_name: a character string of the var we are modeling for
+#return_miss_only: a logical to only return miss visit counts
+#week_period: a logical to fit the linear before model with factors for days until index mod 7,
+#i.e. to have a crude form of week periodicity
+
+
+#' Identify changepoint using CUSUM method, and find expected SSD visits/calculate misses
+#' by fitting a linear model before the changepoint
+#'
+#' @param data A dataframe output by count_prior_events_truven
+#' @param var_name A character string of outcome for which to apply analysis
+#' @param return_miss_only Logical to only return miss information
+#' @param week_period Logical to incorporate a "day of the week" effect into
+#' the linear model. Note this is only sensible for one-day period aggregation.
+#' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
+#' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
+#' @param auto_reg Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
+#' Will automatically fit periodicity, automatically setting week_period to TRUE
+#' @return A list containing miss information, changepoint information, predictions,
+#' the model itself, and a plot of the middle finger curve and model.
+#' @examples
+#' cp_result_cusum <- final_time_map %>%
+#' filter(days_since_dx >= -180) %>%
+#' count_prior_events_truven(event_name = "any_ssd", start_day = 1, by_days = 1) %>%
+#' find_cp_cusum(var_name = "n_miss_visits", return_miss_only = FALSE, week_period=TRUE)
+#' @export
+find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = FALSE,
+                            week_period=FALSE, specify_cp = NULL, auto_reg = FALSE){
+
+  #Require some necessary packages
+  require(trend)
+  require(changepoint)
+  require(tidyverse)
+  require(forecast)
+
+  #Reorder data for easy time series usage
+  cp_out <- arrange(data, -period)
+
+  #Create a dummy column that is variable of interest
+  cp_out$var_name <- cp_out[[var_name]]
+
+  #Convert to a time series object
+  t_series <- ts(cp_out$var_name, start = min(-1*cp_out$period),
+                 frequency = 1)
+
+  if (is.null(specify_cp)){
+  #Identify CP and find which period it corresponds to
+    cp_est <- suppressWarnings( cpts(cpt.mean(t_series,pen.value=1,penalty='None',test.stat='CUSUM')) )
+    cp <- cp_out$period[cp_est]
+  } else {
+    cp <- specify_cp
+  }
+
+  #Extract data for the model, all periods after cp
+  model_data <- cp_out %>% filter(period > cp) %>% mutate(period_neg=-1*period) %>%
+    mutate(week_period = as.factor(period %% 7))
+
+  #Fit model, different if request periodicity or autoregressive
+
+  if(auto_reg){
+      week_period <- TRUE
+      #Convert to time series object
+      t_series <- ts(model_data$var_name, #start = min(-1*model_data$period),
+                     frequency = 7)
+      #See how far out we need to go in forecasting
+      h <- nrow(cp_out) - nrow(model_data)
+
+      #Fit Arima model
+      model <- Arima(t_series, c(1,1,1), seasonal = list(order = c(1,1,1)))
+      #Get forecast
+      pred <- forecast(model, h=h, level = .9)
+      pred_mean <- c(pred$x,pred$mean)
+      pred_upper <- c(pred$x,pred$upper)
+      pred_lower <- c(pred$x,pred$lower)
+
+
+
+  } else{
+  if(week_period){
+    model <- lm(var_name ~ period_neg + week_period, data=model_data)
+  } else{
+    model <- lm(var_name ~ period_neg, data=model_data)
+  }
+
+  #Get prediction covariates and make predictions
+  if(week_period){
+    pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>%
+      mutate(week_period = as.factor(period %% 7)) %>% select(var_name,period_neg,week_period)
+  } else{
+    pred_vars <- cp_out %>% mutate(period_neg=-1*period) %>% select(var_name,period_neg)
+  }
+
+  model_pred_intervals <- predict.lm(model, pred_vars, interval = "prediction", level = 0.90)
+
+  #Extract data
+  pred_mean <- model_pred_intervals[, "fit"]
+  pred_lower <- model_pred_intervals[, "lwr"]
+  pred_upper <- model_pred_intervals[, "upr"]
+
+  }
+
+  #Collect all data needed for cp_out in this function
+
+  #First get miss bins and statistics. Hard code num_miss and num_miss_upper_int to be
+  #floored at 0
+  miss_bins <- data.frame(period=cp_out$period,
+                          Y=cp_out$var_name,
+                          pred1= pred_mean,
+                          lower_int_pred1 = pred_lower,
+                          upper_int_pred1 = pred_upper,
+                          pred=cp_out$var_name,
+                          num_miss = cp_out$var_name - pred_mean,
+                          num_miss_upper_int = cp_out$var_name - pred_upper) %>%
+    mutate(num_miss = num_miss*(num_miss>=0)) %>%
+    mutate(num_miss_upper_int = num_miss_upper_int*(num_miss_upper_int>=0))
+
+  #Filter to only times beyond CP
+  miss_bins <- miss_bins %>% filter(period<=cp)
+  if (return_miss_only){
+    return(miss_bins)
+  }
+
+  if (is.null(specify_cp)){
+    #Output data about the changepoint itself
+    change_point <- data.frame(Y = cp_out$var_name[cp_est],
+                               t = cp_est,
+                               period = cp)
+  } else {
+    #Output data about the changepoint itself
+    change_point <- data.frame(Y = cp_out %>% filter(period == cp) %>% .$var_name,
+                               t = which(cp_out$period == cp),
+                               period = cp)
+  }
+
+  #Output data about predictions
+  pred <- data.frame(period=cp_out$period,
+                     Y=cp_out$var_name,
+                     t = 1:nrow(cp_out),
+                     pred1= pred_mean,
+                     lower_int_pred1 = pred_lower,
+                     upper_int_pred1 = pred_upper,
+                     pred=cp_out$var_name,
+                     num_miss = cp_out$var_name - pred_mean,
+                     num_miss_upper_int = cp_out$var_name - pred_upper)
+
+
+  cp_plot <- pred %>% mutate(t = t-max(t)) %>% ggplot2::ggplot(aes(t, pred)) +
+    ggtitle(paste0("Method = CUSUM, week effect = ", week_period,", auto_reg=",auto_reg))+
     ggplot2::geom_line(aes(y = pred1), color = "red",size=.8) +
     geom_ribbon(aes(ymin = lower_int_pred1, ymax = upper_int_pred1), fill = "red", alpha = 0.2)+
     ggplot2::geom_line(size=.8) +

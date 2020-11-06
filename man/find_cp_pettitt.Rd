@@ -10,7 +10,8 @@ find_cp_pettitt(
   var_name = "n_miss_visits",
   return_miss_only = FALSE,
   week_period = FALSE,
-  specify_cp = NULL
+  specify_cp = NULL,
+  auto_reg = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,9 @@ the linear model. Note this is only sensible for one-day period aggregation.}
 
 \item{specify_cp}{Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)}
+
+\item{auto_reg}{Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
+Will automatically fit periodicity, automatically setting week_period to TRUE}
 }
 \value{
 A list containing miss information, changepoint information, predictions,
