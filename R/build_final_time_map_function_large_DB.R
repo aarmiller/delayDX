@@ -42,7 +42,7 @@ build_final_time_map_large_DB <- function (condition_short_name, duration_prior_
       select(-visit_date, - index_date)
 
     # select for enroilid that were enrolled >=duration_prior_to_index days prior to index
-    enrolled_ge_1year <- index_data %>% filter(time_before_index >= duration_prior_to_index) %>% distinct(enrolid) %>% .$enrolid
+    enrolled_ge_1year <- index_data %>% filter(time_before_index >= duration_prior_to_index) %>% .$enrolid %>% unique()
     index_data <- index_data %>% filter(time_before_index >= duration_prior_to_index)
     dx_data <- all_dx %>% filter(enrolid %in% enrolled_ge_1year) %>% rename(days_since_dx=days_since_index) %>%
       filter(between(days_since_dx,-duration_prior_to_index,0))
@@ -50,33 +50,48 @@ build_final_time_map_large_DB <- function (condition_short_name, duration_prior_
       mutate(days_since_rx = rx_date - index_date) %>%
       filter(between(days_since_rx,-duration_prior_to_index,0)) %>% select(enrolid, rx, days_since_rx)
 
+    # split the dataset
+    enrolid_table <- index_data$enrolid %>% unique()
+    n <- 900000L
+    split_enrolid <- split(enrolid_table, ceiling(seq_along(enrolid_table)/n))
 
-    # subset TB timemap to cases of interest
-    time_map <- time_map %>% inner_join(index_data %>%
-                                          distinct(enrolid, index_date))
-    # add first_dx visit
-    time_map <-  time_map %>% left_join(index_data %>%
-                                          select(enrolid, admdate = index_date, source = first_dx_source, stdplac, key) %>%
-                                          mutate(first_dx = 1)) %>%
-      mutate(first_dx = ifelse(is.na(first_dx), 0, first_dx))
+    time_map_temp <- tibble()
+    for (i in 1:length(split_enrolid)){
 
-    # create inpatient, ED, and outpatient indicators
-    time_map <- time_map %>% mutate(ind = 1L) %>% distinct() %>% filter(!is.na(source)) %>%
-      spread(key = source, value = ind) %>%
-      mutate_at(vars(ED, inpatient, outpatient),~ifelse(is.na(.),0L,.))
+      # subset timemap to cases of interest
+      temp1 <- time_map %>% filter(enrolid %in% split_enrolid[[i]]) %>%
+               inner_join(index_data %>% filter(enrolid %in% split_enrolid[[i]]) %>%
+                                            distinct(enrolid, index_date))
+      # add first_dx visit
+      temp1 <-  temp1 %>% left_join(index_data %>% filter(enrolid %in% split_enrolid[[i]]) %>%
+                                            select(enrolid, admdate = index_date, source = first_dx_source, stdplac, key) %>%
+                                            mutate(first_dx = 1)) %>%
+        mutate(first_dx = ifelse(is.na(first_dx), 0, first_dx))
 
-    # compute time to first diagnosis
-    time_map <- time_map %>%
-      group_by(enrolid) %>%
-      arrange(enrolid, admdate) %>%
-      mutate(days_since_dx= admdate - index_date) %>%
-      mutate(visit_no=row_number()) %>%
-      ungroup()
+      # create inpatient, ED, and outpatient indicators
+      temp1 <- temp1 %>% filter(!is.na(source)) %>%
+        mutate(inpatient = ifelse(source == "inpatient", 1L, 0L)) %>%
+        mutate(outpatient = ifelse(source == "outpatient", 1L, 0L)) %>%
+        mutate(ED = ifelse(source == "ED", 1L, 0L)) %>%
+        select(-source)
 
+      data_temp <- temp1 %>%
+        group_by(enrolid) %>%
+        arrange(enrolid, admdate) %>%
+        mutate(days_since_dx= admdate - index_date) %>%
+        mutate(visit_no=row_number()) %>%
+        ungroup()
+
+      time_map_temp <- time_map_temp %>% bind_rows(data_temp)
+
+    }
+
+    time_map <- time_map_temp
+
+    #Get SSD keys
     ssd_inds <- build_dx_indicators_delay_large_DB(condition_dx_list = ssd_list, db_path = db_path,
                                        db_con = db_con) %>%
       rename(any_ssd=any_ind)
-
 
     # Make final timemap with condition indicators
     # extract names of the condition indicators
@@ -85,24 +100,34 @@ build_final_time_map_large_DB <- function (condition_short_name, duration_prior_
       names()
 
     # add indicators to time_map
-    final_time_map <- time_map %>%
-      left_join(ssd_inds, by="key") %>%
-      mutate_at(vars(ind_names),.funs = list(~ifelse(is.na(.),0L,.)))
+    for (i in 1:length(ind_names)) {
+
+     keys_ssd_cat <- ssd_inds %>% filter(ssd_inds[ind_names[i]] == 1) %>% .$key %>%  unique()
+     time_map[ind_names[i]] <- ifelse(time_map$key %in% keys_ssd_cat, 1L, 0L)
+
+    }
 
     # filter timemap to period of interest before diagnosis
-    final_time_map <- final_time_map %>%
+    time_map <- time_map %>%
       filter(between(days_since_dx,-duration_prior_to_index,0))
 
     # get distinct visit (distinct enrolid, days_since_dx, std_place). If on a given "distinct" visit, if it was labeled
     # as both and outpatient and ED, it should be labeled as an ED visit and not an outpatient visit.
       vars_to_summarise <- c("inpatient", "ED", "first_dx", ind_names)
 
-      final_time_map <- final_time_map %>%
-        group_by(enrolid, days_since_dx, stdplac) %>%
-        summarise_at(vars(vars_to_summarise),.funs = list(~max(.))) %>%
-        ungroup() %>%
-        mutate(outpatient = ifelse(inpatient == 0 & ED == 0 , 1, 0)) %>%
-        mutate(all_visits = 1)
+      final_time_map <- tibble()
+      for (i in 1:length(split_enrolid)){
+
+        data_temp <- time_map %>% filter(enrolid %in% split_enrolid[[i]]) %>%
+          group_by(enrolid, days_since_dx, stdplac) %>%
+          summarise_at(vars(vars_to_summarise),.funs = list(~max(.))) %>%
+          ungroup() %>%
+          mutate(outpatient = ifelse(inpatient == 0 & ED == 0 , 1, 0)) %>%
+          mutate(all_visits = 1)
+
+        final_time_map <- final_time_map %>% bind_rows(data_temp)
+
+      }
 
   return(list(final_time_map = final_time_map,
               index_data = index_data,
