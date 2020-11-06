@@ -704,6 +704,8 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
 #' @param return_miss_only Logical argument to only return the tibbles of miss visit counts
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
+#' @param auto_reg Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
+#' Will automatically fit periodicity, automatically setting week_period to TRUE. Only relevant for cusum and pettitt methods
 #' @return A list containing tibbles of information about missed visits. These tibbles change
 #' depending on the method used, but all contain miss predictions and a plot
 #'
@@ -715,7 +717,8 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
 #'
 #' @export
 find_change_point <- function(data,var_name="n_miss_visits",method,eval_criteria="AIC",
-                              return_miss_only=FALSE, week_period=FALSE, specify_cp = NULL){
+                              return_miss_only=FALSE, week_period=FALSE, specify_cp = NULL,
+                              auto_reg=FALSE){
 
   if(method %in% c("lm","lm_quad","lm_cube", "quad", "cube", "exp", "spline")){
     output <- find_cp_linreg(data, var_name=var_name,method=method,eval_criteria = eval_criteria,
@@ -724,13 +727,11 @@ find_change_point <- function(data,var_name="n_miss_visits",method,eval_criteria
     return(output)
   } else if(method=="pettitt"){
     output <- find_cp_pettitt(data, var_name=var_name, return_miss_only = return_miss_only,
-                              week_period = week_period,
-                              specify_cp = specify_cp)
+                              week_period = week_period, specify_cp = specify_cp, auto_reg = auto_reg)
     return(output)
   } else if(method=="cusum"){
     output <- find_cp_cusum(data, var_name=var_name, return_miss_only = return_miss_only,
-                            week_period = week_period,
-                            specify_cp = specify_cp)
+                            week_period = week_period, specify_cp = specify_cp, auto_reg = auto_reg)
     return(output)
   } else if(method %in% c("MSE", "RMSE", "MAE", "MSLE", "RMSLE")){
     output <- find_cp_loss_fun(data, var_name = var_name, return_miss_only = return_miss_only,
