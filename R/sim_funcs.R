@@ -14,6 +14,8 @@
 #' This is a required argument if cp_method = "set_cp"
 #' @param week_period Logical to incorporate a "day of the week" effect into the linear model, if
 #' method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation
+#' @param auto_reg Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
+#' Will automatically fit periodicity, automatically setting week_period to TRUE. Only relevant for cusum and pettitt methods
 #' @param set_cp_method The method used to model the data prior to a specified change point for the "set_cp" cp_method
 #' (i.e. "linear", "quadratic", "cubic", "quartic", "quintic", "sextic", or "exponential")
 #' @param prediction_bound_for_sim Logical to specify whether or not to use the estimated predicted value or the upper bound 90%
@@ -40,7 +42,8 @@
 #' @export
 #'
 prep_sim_data <- function(time_map_data,by_days=1,start_day=1, event_name = "any_ssd", cp_method = "lm_quad", specify_cp = NULL,
-                          set_cp_method = NULL, eval_criteria="AIC", week_period=FALSE, prediction_bound_for_sim = FALSE){
+                          set_cp_method = NULL, eval_criteria="AIC", week_period=FALSE, prediction_bound_for_sim = FALSE,
+                          auto_reg=FALSE){
 
   if (cp_method == "set_cp" & (is.null(specify_cp) | is.null(set_cp_method))){
     stop("If using the 'set_cp' method for cp_method, specify_cp and set_cp_method cannot be NULL")
@@ -120,6 +123,7 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1, event_name = "any
               eval_criteria=eval_criteria,
               week_period=week_period,
               specify_cp = specify_cp,
+              auto_reg = auto_reg,
               set_cp_method = set_cp_method,
               prediction_bound_for_sim = prediction_bound_for_sim))
 

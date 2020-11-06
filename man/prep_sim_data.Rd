@@ -14,7 +14,8 @@ prep_sim_data(
   set_cp_method = NULL,
   eval_criteria = "AIC",
   week_period = FALSE,
-  prediction_bound_for_sim = FALSE
+  prediction_bound_for_sim = FALSE,
+  auto_reg = FALSE
 )
 }
 \arguments{
@@ -45,6 +46,9 @@ method is "pettitt" of "cusum". Note this is only sensible for one-day period ag
 
 \item{prediction_bound_for_sim}{Logical to specify whether or not to use the estimated predicted value or the upper bound 90%
 prediction value in the simulations. The defualt is FALSE which uses the estimated predicited value}
+
+\item{auto_reg}{Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
+Will automatically fit periodicity, automatically setting week_period to TRUE. Only relevant for cusum and pettitt methods}
 }
 \description{
 Prepare data for simulation
