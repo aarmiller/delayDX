@@ -508,9 +508,9 @@ boot_change_point_large_DB <- function (sim_data, sim_version="visits", n_sim_tr
 #' is the smallest value between number of boot_trials or detected number of cores - 1
 #' @param no_bootstrapping Specifies whether you want to run the simulations without bootstrapping the original dataset
 #'@export
-run_cp_bootstrap_large_DB <-  function (sim_data, sim_version="visits", boot_trials = 100, n_sim_trials = 50,
-                                run_cp_bootstrap_large_dbnew_draw_weight = 0.0, num_cores = NULL, sim_duartion_for_regression = FALSE,
-                                no_bootstrapping = FALSE)   {
+run_cp_bootstrap_large_DB <- function(sim_data, sim_version="visits", boot_trials = 100, n_sim_trials = 50,
+                                       new_draw_weight = 0.0, num_cores = NULL, sim_duartion_for_regression = FALSE,
+                                       no_bootstrapping = FALSE){
   simulation_data <- sim_data
 
 
