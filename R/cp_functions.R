@@ -217,6 +217,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
 
   if (is.null(specify_cp)){
     #Identify CP and find which period it corresponds to
+    cp_est <- pettitt.test(t_series)$estimate[[1]]
     cp <- cp_out$period[pettitt.test(t_series)$estimate[[1]]]
   } else {
     cp <- specify_cp
@@ -231,7 +232,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   if(auto_reg){
     week_period <- TRUE
     #Convert to time series object
-    t_series <- ts(model_data$var_name, #start = min(-1*model_data$period),
+    t_series <- ts(model_data$var_name,
                    frequency = 7)
     #See how far out we need to go in forecasting
     h <- nrow(cp_out) - nrow(model_data)
