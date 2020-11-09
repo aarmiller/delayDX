@@ -73,6 +73,7 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1, event_name = "any
                         return_miss_only = TRUE,
                         eval_criteria = eval_criteria,
                         week_period = week_period,
+                        auto_reg = auto_reg,
                         specify_cp = specify_cp)
 
     miss_bins_patients <- tmp %>%
@@ -81,6 +82,7 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1, event_name = "any
                         return_miss_only = TRUE,
                         eval_criteria = eval_criteria,
                         week_period = week_period,
+                        auto_reg = auto_reg,
                         specify_cp = specify_cp)
 
     # number of patients to simulate
@@ -463,7 +465,7 @@ run_sim_miss_patients <- function (sim_data, trials = 50, new_draw_weight=0.0, n
 boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 100L,
                                new_draw_weight=0.0,sim_duartion_for_regression = FALSE,
                                eval_criteria="AIC", week_period=FALSE, num_cores = NULL,
-                               no_bootstrapping = FALSE) {
+                               no_bootstrapping = FALSE, auto_reg = FALSE) {
   if (no_bootstrapping == FALSE){
     # draw bootstrapped samples
     draw_time_map <- sim_data$time_map %>%
@@ -490,6 +492,7 @@ boot_change_point <- function (sim_data, sim_version="visits", n_sim_trials = 10
                             method = sim_data$cp_method,
                             eval_criteria = sim_data$eval_criteria,
                             week_period = sim_data$week_period,
+                            auto_reg = sim_data$auto_reg,
                             specify_cp = sim_data$specify_cp)
     } else {
       sim_cp <- sim_cp %>%
