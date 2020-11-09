@@ -13,7 +13,8 @@ boot_change_point(
   eval_criteria = "AIC",
   week_period = FALSE,
   num_cores = NULL,
-  no_bootstrapping = FALSE
+  no_bootstrapping = FALSE,
+  auto_reg = FALSE
 )
 }
 \arguments{
