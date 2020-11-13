@@ -58,7 +58,7 @@ gether_dx_keys_delay_large_DB <- function (collect_tab = collect_table(), dx_lis
       in_temp_caseid <- in_temp$caseid %>% unique()
 
       dx_keys <- db_con %>% dplyr::tbl("inpatient_keys") %>% dplyr::mutate(enrolid = as.integer(.data$enrolid)) %>%
-        dplyr::select(.data$ccae, .data$year, .data$caseid, .data$key) %>% dplyr::filter(ccae == 1) %>%
+        dplyr::select(.data$ccae, .data$year, .data$caseid, .data$key) %>%
         filter(caseid %in% in_temp_caseid) %>% collect(n = Inf) %>%
         dplyr::inner_join(in_temp , by = c("ccae", "year", "caseid")) %>%
         dplyr::select(.data$dx, .data$key)
