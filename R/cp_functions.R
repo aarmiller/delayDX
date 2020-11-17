@@ -203,6 +203,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   require(trend)
   require(changepoint)
   require(tidyverse)
+  require(forecast)
 
   #Reorder data for easy time series usage
   cp_out <- arrange(data, -period)
