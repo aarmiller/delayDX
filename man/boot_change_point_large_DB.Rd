@@ -12,6 +12,7 @@ boot_change_point_large_DB(
   sim_duartion_for_regression = FALSE,
   eval_criteria = "AIC",
   week_period = FALSE,
+  auto_reg = FALSE,
   num_cores = NULL,
   no_bootstrapping = FALSE
 )
