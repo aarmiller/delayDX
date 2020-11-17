@@ -357,7 +357,7 @@ run_sim_miss_patients_large_DB <- function (sim_data, trials = 50, new_draw_weig
 
 boot_change_point_large_DB <- function (sim_data, sim_version="visits", n_sim_trials = 100L,
                                new_draw_weight=0.0,sim_duartion_for_regression = FALSE,
-                               eval_criteria="AIC", week_period=FALSE, num_cores = NULL,
+                               eval_criteria="AIC", week_period=FALSE, auto_reg=FALSE, num_cores = NULL,
                                no_bootstrapping = FALSE) {
   if (no_bootstrapping == FALSE){
     # draw bootstrapped samples
@@ -385,6 +385,7 @@ boot_change_point_large_DB <- function (sim_data, sim_version="visits", n_sim_tr
                             method = sim_data$cp_method,
                             eval_criteria = sim_data$eval_criteria,
                             week_period = sim_data$week_period,
+                            auto_reg = sim_data$auto_reg,
                             specify_cp = sim_data$specify_cp)
     } else {
       sim_cp <- sim_cp %>%
@@ -437,6 +438,7 @@ boot_change_point_large_DB <- function (sim_data, sim_version="visits", n_sim_tr
                             method = sim_data$cp_method,
                             eval_criteria = sim_data$eval_criteria,
                             week_period = sim_data$week_period,
+                            auto_reg = sim_data$auto_reg,
                             specify_cp = sim_data$specify_cp)
       } else {
         sim_cp <- sim_cp %>%
