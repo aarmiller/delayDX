@@ -57,7 +57,7 @@ prep_sim_data <- function(time_map_data,by_days=1,start_day=1, event_name = "any
     # This way you don't have to adjust the mean duration missed from the simulations.
     dplyr::mutate(enrolid_new=enrolid) %>%
     dplyr::select(enrolid,enrolid_new,period,days_since_dx,miss_ind=!!event_name,old_days_since_dx,inpatient,ed) %>%
-    filter(period>=0)
+    dplyr::filter(period>=0)
 
   # Compute preliminary miss bins for simulation
   tmp <- count_prior_events_truven(sim_time_map,
@@ -164,9 +164,9 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
 
   # stats when 0 miss patients are included
   w0_stats <- sim_miss_num %>%
-    full_join(tibble(enrolid_new=rep(-99,tmp_num_not_drawn)),by = "enrolid_new") %>%
-    mutate(across(.cols = everything(),~replace_na(.,0))) %>%
-    summarise_at(vars(-enrolid_new),list(mean_w0=mean,median_w0=median))
+    dplyr::full_join(tibble(enrolid_new=rep(-99,tmp_num_not_drawn)),by = "enrolid_new") %>%
+    dplyr::mutate(across(.cols = everything(),~replace_na(.,0))) %>%
+    dplyr::summarise_at(dplyr::vars(-enrolid_new),list(mean_w0=mean,median_w0=median))
 
   ## build table of number of missed visits
   sim_trial_n_visit_table <- compute_sim_trial_n_visit_table(sim_miss_num_data = sim_miss_num,

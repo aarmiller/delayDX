@@ -26,8 +26,8 @@ count_prior_events_truven <- function(time_map_data,event_name,start_day=1L,by_d
                      n_patients=dplyr::n_distinct(.data$enrolid))
 
   tmp2 <- tmp %>%
-    filter(miss_ind==1) %>%
-    dplyr::summarise(n_miss_visits=n(),
+    dplyr::filter(miss_ind==1) %>%
+    dplyr::summarise(n_miss_visits=dplyr::n(),
                      n_miss_patients=dplyr::n_distinct(.data$enrolid))
 
   dplyr::inner_join(tmp1,tmp2,by="period")
