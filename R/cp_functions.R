@@ -523,6 +523,8 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
 #' @param return_miss_only Logical argument to only return the tibbles of miss visit counts
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
+#' @param week_period Logical to incorporate a "day of the week" effect into
+#' the linear model. Note this is only sensible for one-day period aggregation.
 #' @examples
 #' cp_result_original <- final_time_map %>%
 #' count_prior_events_truven(event_name = "any_ssd", start_day = 1, by_days = 1) %>%
@@ -530,7 +532,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
 #'
 #' @export
 find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criteria="AIC", return_miss_only=FALSE,
-                           specify_cp = NULL){
+                           specify_cp = NULL, week_period=FALSE){
 
   data$var_name <- data[[var_name]]
 
@@ -555,7 +557,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
 
     if (method=="lm_cube"){
       fits = tibble::tibble(cp=2:max(data$t)) %>%
-        dplyr::mutate(res=purrr::map(cp, ~fit_cp_lm_cube(data = data, x=.) )) %>%
+        dplyr::mutate(res=purrr::map(cp, ~fit_cp_lm_cube(data = data, x=., periodicity=week_period) )) %>%
         tidyr::unnest(res)
     }
 
@@ -600,7 +602,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
     }
 
     if (method=="lm_cube"){
-      fits = fit_cp_lm_cube(data = data, x=change_t)
+      fits = fit_cp_lm_cube(data = data, x=change_t, periodicity=week_period)
     }
 
     if (method=="cube"){
@@ -641,7 +643,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
   }
 
   if (method=="lm_cube"){
-    out <- fit_cp_lm_cube(data = data, x=change_t,return_all = TRUE)
+    out <- fit_cp_lm_cube(data = data, x=change_t,return_all = TRUE, periodicity=week_period)
   }
 
   if (method=="exp"){
@@ -701,8 +703,8 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
 #' "MSE", "RMSE", "MAE", "MSLE", "RMSLE"
 #' @param eval_criteria The evaluation criteria used to find change points, if using a
 #' linear regression method
-#' @param week_period Logical to incorporate a "day of the week" effect into the linear model, if
-#' method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation
+#' @param week_period Logical to incorporate a "day of the week" effect into the linear mode.
+#' Note this is only sensible for one-day period aggregation
 #' @param return_miss_only Logical argument to only return the tibbles of miss visit counts
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
@@ -725,7 +727,7 @@ find_change_point <- function(data,var_name="n_miss_visits",method,eval_criteria
   if(method %in% c("lm","lm_quad","lm_cube", "quad", "cube", "exp", "spline")){
     output <- find_cp_linreg(data, var_name=var_name,method=method,eval_criteria = eval_criteria,
                              return_miss_only = return_miss_only,
-                             specify_cp = specify_cp)
+                             specify_cp = specify_cp, week_period=week_period)
     return(output)
   } else if(method=="pettitt"){
     output <- find_cp_pettitt(data, var_name=var_name, return_miss_only = return_miss_only,
