@@ -10,7 +10,8 @@ find_cp_linreg(
   method = "lm",
   eval_criteria = "AIC",
   return_miss_only = FALSE,
-  specify_cp = NULL
+  specify_cp = NULL,
+  week_period = FALSE
 )
 }
 \arguments{
@@ -27,6 +28,9 @@ find_cp_linreg(
 
 \item{specify_cp}{Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)}
+
+\item{week_period}{Logical to incorporate a "day of the week" effect into
+the linear model. Note this is only sensible for one-day period aggregation.}
 }
 \description{
 Find the change point in count data using linear regression models
