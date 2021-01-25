@@ -230,7 +230,8 @@ fit_cp_lm_cube <- function(data,x,return_all=FALSE,periodicity=FALSE){
 
   if (return_all==TRUE){
 
-    preds <- new_data %>%
+    if(periodicity){
+      preds <- new_data %>%
       dplyr::select(period,Y,t,shift,shift2,shift3,week_period) %>%
       dplyr::mutate(week_var=paste0("week_period",as.character(week_period)))
 
@@ -252,6 +253,18 @@ fit_cp_lm_cube <- function(data,x,return_all=FALSE,periodicity=FALSE){
                     pred_high=ilink(pred + (2*se_fit)),
                     pred=ilink(pred),
                     pred1=ilink(pred1))
+    } else{
+
+      preds <- new_data %>%
+        dplyr::select(period,Y,t,shift,shift2,shift3) %>%
+        modelr::add_predictions(fit) %>%
+        dplyr::mutate(pred1=fit$coefficients[1] + fit$coefficients[2]*shift,
+                      se_fit=predict(fit, type = "link", se.fit = TRUE)$se.fit,
+                      pred_low=ilink(pred - (2*se_fit)),
+                      pred_high=ilink(pred + (2*se_fit)),
+                      pred=ilink(pred),
+                      pred1=ilink(pred1))
+    }
 
     out <- list(fit=fit,
                 pred=preds,
