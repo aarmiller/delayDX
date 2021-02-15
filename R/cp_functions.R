@@ -239,7 +239,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
     h <- nrow(cp_out) - nrow(model_data)
 
     #Fit Arima model
-    model <- Arima(t_series, c(1,1,1), seasonal = list(order = c(1,1,1)))
+    model <- Arima(t_series, c(1,0,1), seasonal = list(order = c(1,0,0)))
     #Get forecast
     pred <- forecast(model, h=h, level = .9)
     pred_mean <- c(pred$x,pred$mean)
@@ -410,7 +410,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
       h <- nrow(cp_out) - nrow(model_data)
 
       #Fit Arima model
-      model <- Arima(t_series, c(1,1,1), seasonal = list(order = c(1,1,1)))
+      model <- Arima(t_series, c(1,0,1), seasonal = list(order = c(1,0,0)))
       #Get forecast
       pred <- forecast(model, h=h, level = .9)
       pred_mean <- c(pred$x,pred$mean)
