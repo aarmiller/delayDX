@@ -231,7 +231,27 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   #Fit model, different if request periodicity or autoregressive
 
   if(auto_reg){
-    week_period <- TRUE
+    if(week_period){
+      #Convert to time series object
+      t_series <- ts(model_data$var_name,
+                     frequency = 7)
+      #See how far out we need to go in forecasting
+      h <- nrow(cp_out) - nrow(model_data)
+
+      #Set up covariates to use for prediction
+      pred_data <- cp_out %>% filter(period <= cp) %>% mutate(period_neg=-1*period) %>%
+        mutate(week_period = as.factor(period %% 7))
+
+      #Fit Arima model with additive effect for week
+      model <- Arima(t_series, c(1,0,1), xreg=model_data$week_period)
+      #Get forecast
+      pred <- forecast(model, h=h, level = .9, xreg = pred_data$week_period)
+      pred_mean <- c(pred$x,pred$mean)
+      pred_upper <- c(pred$x,pred$upper)
+      pred_lower <- c(pred$x,pred$lower)
+
+
+    } else{
     #Convert to time series object
     t_series <- ts(model_data$var_name,
                    frequency = 7)
@@ -245,6 +265,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
     pred_mean <- c(pred$x,pred$mean)
     pred_upper <- c(pred$x,pred$upper)
     pred_lower <- c(pred$x,pred$lower)
+    }
 
 
 
@@ -399,10 +420,32 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
   model_data <- cp_out %>% filter(period > cp) %>% mutate(period_neg=-1*period) %>%
     mutate(week_period = as.factor(period %% 7))
 
+
   #Fit model, different if request periodicity or autoregressive
 
   if(auto_reg){
-      week_period <- TRUE
+    if(week_period){
+      #Convert to time series object
+      t_series <- ts(model_data$var_name,
+                     frequency = 7)
+      #See how far out we need to go in forecasting
+      h <- nrow(cp_out) - nrow(model_data)
+
+      #Set up covariates to use for prediction
+      pred_data <- cp_out %>% filter(period <= cp) %>% mutate(period_neg=-1*period) %>%
+        mutate(week_period = as.factor(period %% 7))
+
+      #Fit Arima model with additive effect for week
+      model <- Arima(t_series, c(1,0,1), xreg=model_data$week_period)
+      #Get forecast
+      pred <- forecast(model, h=h, level = .9, xreg = pred_data$week_period)
+      pred_mean <- c(pred$x,pred$mean)
+      pred_upper <- c(pred$x,pred$upper)
+      pred_lower <- c(pred$x,pred$lower)
+
+
+    } else{
+
       #Convert to time series object
       t_series <- ts(model_data$var_name, #start = min(-1*model_data$period),
                      frequency = 7)
@@ -416,6 +459,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
       pred_mean <- c(pred$x,pred$mean)
       pred_upper <- c(pred$x,pred$upper)
       pred_lower <- c(pred$x,pred$lower)
+    }
 
 
 
