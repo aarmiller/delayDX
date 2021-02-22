@@ -242,13 +242,33 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
       pred_data <- cp_out %>% filter(period <= cp) %>% mutate(period_neg=-1*period) %>%
         mutate(week_period = as.factor(period %% 7))
 
+      #Calculate xreg matrices by hand, as function can't handle factors
+      model_xreg <- model_data %>% mutate(num_period = period %% 7) %>%
+        mutate(day1 = as.numeric(num_period == 1)) %>%
+        mutate(day2 = as.numeric(num_period == 2)) %>%
+        mutate(day3 = as.numeric(num_period == 3)) %>%
+        mutate(day4 = as.numeric(num_period == 4)) %>%
+        mutate(day5 = as.numeric(num_period == 5)) %>%
+        mutate(day6 = as.numeric(num_period == 6)) %>%
+        select(day1,day2,day3,day4,day5,day6) %>%
+        as.matrix()
+      pred_xreg <- pred_data %>% mutate(num_period = period %% 7) %>%
+        mutate(day1 = as.numeric(num_period == 1)) %>%
+        mutate(day2 = as.numeric(num_period == 2)) %>%
+        mutate(day3 = as.numeric(num_period == 3)) %>%
+        mutate(day4 = as.numeric(num_period == 4)) %>%
+        mutate(day5 = as.numeric(num_period == 5)) %>%
+        mutate(day6 = as.numeric(num_period == 6)) %>%
+        select(day1,day2,day3,day4,day5,day6) %>%
+        as.matrix()
+
       #Fit Arima model with additive effect for week
-      model <- Arima(t_series, c(1,0,1), xreg=model_data$week_period)
+      model <- Arima(t_series, c(1,0,1), xreg=model_xreg, method = "ML")
       #Get forecast
-      pred <- forecast(model, h=h, level = .9, xreg = pred_data$week_period)
-      pred_mean <- c(pred$x,pred$mean)
-      pred_upper <- c(pred$x,pred$upper)
-      pred_lower <- c(pred$x,pred$lower)
+      pred <- forecast(model, h=h, level = .9, xreg = pred_xreg)
+      pred_mean <- c(pred$fitted,pred$mean)
+      pred_upper <- c(fitted(model) + 1.96*sqrt(model$sigma2),pred$upper)
+      pred_lower <- c(fitted(model) - 1.96*sqrt(model$sigma2),pred$lower)
 
 
     } else{
@@ -262,9 +282,9 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
     model <- Arima(t_series, c(1,0,1), seasonal = list(order = c(1,0,0)))
     #Get forecast
     pred <- forecast(model, h=h, level = .9)
-    pred_mean <- c(pred$x,pred$mean)
-    pred_upper <- c(pred$x,pred$upper)
-    pred_lower <- c(pred$x,pred$lower)
+    pred_mean <- c(pred$fitted,pred$mean)
+    pred_upper <- c(fitted(model) + 1.96*sqrt(model$sigma2),pred$upper)
+    pred_lower <- c(fitted(model) - 1.96*sqrt(model$sigma2),pred$lower)
     }
 
 
@@ -435,13 +455,33 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
       pred_data <- cp_out %>% filter(period <= cp) %>% mutate(period_neg=-1*period) %>%
         mutate(week_period = as.factor(period %% 7))
 
+      #Calculate xreg matrices by hand, as function can't handle factors
+      model_xreg <- model_data %>% mutate(num_period = period %% 7) %>%
+        mutate(day1 = as.numeric(num_period == 1)) %>%
+        mutate(day2 = as.numeric(num_period == 2)) %>%
+        mutate(day3 = as.numeric(num_period == 3)) %>%
+        mutate(day4 = as.numeric(num_period == 4)) %>%
+        mutate(day5 = as.numeric(num_period == 5)) %>%
+        mutate(day6 = as.numeric(num_period == 6)) %>%
+        select(day1,day2,day3,day4,day5,day6) %>%
+        as.matrix()
+      pred_xreg <- pred_data %>% mutate(num_period = period %% 7) %>%
+        mutate(day1 = as.numeric(num_period == 1)) %>%
+        mutate(day2 = as.numeric(num_period == 2)) %>%
+        mutate(day3 = as.numeric(num_period == 3)) %>%
+        mutate(day4 = as.numeric(num_period == 4)) %>%
+        mutate(day5 = as.numeric(num_period == 5)) %>%
+        mutate(day6 = as.numeric(num_period == 6)) %>%
+        select(day1,day2,day3,day4,day5,day6) %>%
+        as.matrix()
+
       #Fit Arima model with additive effect for week
-      model <- Arima(t_series, c(1,0,1), xreg=model_data$week_period)
+      model <- Arima(t_series, c(1,0,1), xreg=model_xreg, method = "ML")
       #Get forecast
-      pred <- forecast(model, h=h, level = .9, xreg = pred_data$week_period)
-      pred_mean <- c(pred$x,pred$mean)
-      pred_upper <- c(pred$x,pred$upper)
-      pred_lower <- c(pred$x,pred$lower)
+      pred <- forecast(model, h=h, level = .9, xreg = pred_xreg)
+      pred_mean <- c(pred$fitted,pred$mean)
+      pred_upper <- c(fitted(model) + 1.96*sqrt(model$sigma2),pred$upper)
+      pred_lower <- c(fitted(model) - 1.96*sqrt(model$sigma2),pred$lower)
 
 
     } else{
@@ -456,9 +496,9 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
       model <- Arima(t_series, c(1,0,1), seasonal = list(order = c(1,0,0)))
       #Get forecast
       pred <- forecast(model, h=h, level = .9)
-      pred_mean <- c(pred$x,pred$mean)
-      pred_upper <- c(pred$x,pred$upper)
-      pred_lower <- c(pred$x,pred$lower)
+      pred_mean <- c(pred$fitted,pred$mean)
+      pred_upper <- c(fitted(model) + 1.96*sqrt(model$sigma2),pred$upper)
+      pred_lower <- c(fitted(model) - 1.96*sqrt(model$sigma2),pred$lower)
     }
 
 
