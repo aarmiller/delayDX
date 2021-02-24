@@ -23,7 +23,6 @@ Imports:
     broom,
     ggplot2,
     modelr,
-    multidplyr,
     lubridate,
     trend,
     changepoint

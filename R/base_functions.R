@@ -11,7 +11,6 @@
 #usethis::use_package("broom")
 #usethis::use_package("ggplot2")
 #usethis::use_package("modelr")
-#usethis::use_package("multidplyr")
 #usethis::use_package("lubridate")
 #usethis::use_package("trend")
 #usethis::use_package("changepoint")
