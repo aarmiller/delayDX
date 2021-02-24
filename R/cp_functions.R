@@ -187,7 +187,7 @@ find_cp_loss_fun <- function(data, var_name = "n_miss_visits", return_miss_only 
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
 #' @param auto_reg Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
-#' Will automatically fit periodicity, automatically setting week_period to TRUE
+#' If week_period is FALSE, will use a 7-day seasonality component. If week_period is TRUE, will use an additive indicator
 #' @return A list containing miss information, changepoint information, predictions,
 #' the model itself, and a plot of the middle finger curve and model.
 #' @examples
@@ -400,7 +400,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
 #' @param auto_reg Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
-#' Will automatically fit periodicity, automatically setting week_period to TRUE
+#' If week_period is FALSE, will use a 7-day seasonality component. If week_period is TRUE, will use an additive indicator
 #' @return A list containing miss information, changepoint information, predictions,
 #' the model itself, and a plot of the middle finger curve and model.
 #' @examples

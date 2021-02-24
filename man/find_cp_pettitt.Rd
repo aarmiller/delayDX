@@ -28,7 +28,7 @@ the linear model. Note this is only sensible for one-day period aggregation.}
 repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)}
 
 \item{auto_reg}{Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
-Will automatically fit periodicity, automatically setting week_period to TRUE}
+If week_period is FALSE, will use a 7-day seasonality component. If week_period is TRUE, will use an additive indicator}
 }
 \value{
 A list containing miss information, changepoint information, predictions,
