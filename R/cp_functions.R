@@ -250,7 +250,8 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
         mutate(day4 = as.numeric(num_period == 4)) %>%
         mutate(day5 = as.numeric(num_period == 5)) %>%
         mutate(day6 = as.numeric(num_period == 6)) %>%
-        select(day1,day2,day3,day4,day5,day6) %>%
+        mutate(trend = period_neg) %>%
+        select(day1,day2,day3,day4,day5,day6,trend) %>%
         as.matrix()
       pred_xreg <- pred_data %>% mutate(num_period = period %% 7) %>%
         mutate(day1 = as.numeric(num_period == 1)) %>%
@@ -259,7 +260,8 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
         mutate(day4 = as.numeric(num_period == 4)) %>%
         mutate(day5 = as.numeric(num_period == 5)) %>%
         mutate(day6 = as.numeric(num_period == 6)) %>%
-        select(day1,day2,day3,day4,day5,day6) %>%
+        mutate(trend = period_neg) %>%
+        select(day1,day2,day3,day4,day5,day6,trend) %>%
         as.matrix()
 
       #Fit Arima model with additive effect for week
@@ -463,7 +465,8 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
         mutate(day4 = as.numeric(num_period == 4)) %>%
         mutate(day5 = as.numeric(num_period == 5)) %>%
         mutate(day6 = as.numeric(num_period == 6)) %>%
-        select(day1,day2,day3,day4,day5,day6) %>%
+        mutate(trend = period_neg) %>%
+        select(day1,day2,day3,day4,day5,day6,trend) %>%
         as.matrix()
       pred_xreg <- pred_data %>% mutate(num_period = period %% 7) %>%
         mutate(day1 = as.numeric(num_period == 1)) %>%
@@ -472,7 +475,8 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
         mutate(day4 = as.numeric(num_period == 4)) %>%
         mutate(day5 = as.numeric(num_period == 5)) %>%
         mutate(day6 = as.numeric(num_period == 6)) %>%
-        select(day1,day2,day3,day4,day5,day6) %>%
+        mutate(trend = period_neg) %>%
+        select(day1,day2,day3,day4,day5,day6,trend) %>%
         as.matrix()
 
       #Fit Arima model with additive effect for week
