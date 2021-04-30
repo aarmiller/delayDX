@@ -163,7 +163,7 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
                      n_vis_inpatient_out = sum(inpatient==1 & outpatient==1 & ed==0),
                      n_vis_inpatient_ed = sum(inpatient==1 & outpatient==0 & ed==1),
                      n_vis_ed_out = sum(inpatient==0 & outpatient==0 & ed==0),
-                     n_vis_all_3 = sum(inpatient==1 & outpatient==1 & ed==1)
+                     n_vis_all_3 = sum(inpatient==1 & outpatient==1 & ed==1),
                      dur = max(-(days_since_dx)))
 
   # for computing mean and median duration with the 0 visits
@@ -378,7 +378,7 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
                      n_vis_inpatient_out = sum(inpatient==1 & outpatient==1 & ed==0),
                      n_vis_inpatient_ed = sum(inpatient==1 & outpatient==0 & ed==1),
                      n_vis_ed_out = sum(inpatient==0 & outpatient==0 & ed==0),
-                     n_vis_all_3 = sum(inpatient==1 & outpatient==1 & ed==1)
+                     n_vis_all_3 = sum(inpatient==1 & outpatient==1 & ed==1),
                      dur = max(-(days_since_dx)))
 
   # for computing mean and median duration with the 0 visits
