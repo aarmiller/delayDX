@@ -157,13 +157,6 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
                      n_vis_out = sum(outpatient==1),
                      n_vis_ed = sum(ed==1),
                      n_vis_inpatient = sum(inpatient==1),
-                     n_vis_out_only = sum(ed==0 & inpatient==0),
-                     n_vis_ed_only = sum(inpatient==0 & outpatient==0),
-                     n_vis_inpatient_only = sum(ed==0 & outpatient==0),
-                     n_vis_inpatient_out = sum(inpatient==1 & outpatient==1 & ed==0),
-                     n_vis_inpatient_ed = sum(inpatient==1 & outpatient==0 & ed==1),
-                     n_vis_ed_out = sum(inpatient==0 & outpatient==0 & ed==0),
-                     n_vis_all_3 = sum(inpatient==1 & outpatient==1 & ed==1),
                      dur = max(-(days_since_dx)))
 
   # for computing mean and median duration with the 0 visits
@@ -196,20 +189,6 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
                      median_n_vis_ed =median(n_vis_ed),    # median number of ed misses per patient
                      mean_n_vis_inpatient = mean(n_vis_inpatient),     # mean number of ed misses per patient
                      median_n_vis_inpatient = median(n_vis_inpatient),  # median number of ed misses per patient
-                     mean_n_vis_out_only = mean(n_vis_out_only),
-                     median_n_vis_out_only = median(n_vis_out_only),
-                     mean_n_vis_ed_only = mean(n_vis_ed_only),
-                     median_n_vis_ed_only = median(n_vis_ed_only),
-                     mean_n_vis_inpatient_only = mean(n_vis_inpatient_only),
-                     median_n_vis_inpatient_only = median(n_vis_inpatient_only),
-                     mean_n_vis_inpatient_out = mean(n_vis_inpatient_out),
-                     median_n_vis_inpatient_out = median(n_vis_inpatient_out),
-                     mean_n_vis_inpatient_ed = mean(n_vis_inpatient_ed),
-                     median_n_vis_inpatient_ed = median(n_vis_inpatient_ed),
-                     mean_n_vis_ed_out = mean(n_vis_ed_out),
-                     median_n_vis_ed_out = median(n_vis_ed_out),
-                     mean_n_vis_all_3 = mean(n_vis_all_3),
-                     median_n_vis_all_3 = median(n_vis_all_3),
                      min_dur = min(dur),           # min duration
                      mean_dur = mean(dur),         # mean miss duration
                      median_dur = median(dur),     # median miss duration
@@ -217,14 +196,7 @@ sim_miss_visits <- function (sim_data, sim_duartion_for_regression = FALSE) {
                      n_vis = sum(n_vis),
                      n_vis_out = sum(n_vis_out),
                      n_vis_ed = sum(n_vis_ed),
-                     n_vis_inpatient = sum(n_vis_inpatient),
-                     n_vis_out_only = sum(n_vis_out_only),
-                     n_vis_ed_only = sum(n_vis_ed_only),
-                     n_vis_inpatient_only = sum(n_vis_inpatient_only),
-                     n_vis_inpatient_out = sum(n_vis_inpatient_out),
-                     n_vis_inpatient_ed = sum(n_vis_inpatient_ed),
-                     n_vis_ed_out = sum(n_vis_ed_out),
-                     n_vis_all_3 = sum(n_vis_all_3)) %>%            # max miss duration
+                     n_vis_inpatient = sum(n_vis_inpatient)) %>%            # max miss duration
     dplyr::bind_cols(w0_stats)
 
   ## Sim Duration for Regression ##
@@ -372,13 +344,6 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
                      n_vis_out = sum(outpatient==1),
                      n_vis_ed = sum(ed==1),
                      n_vis_inpatient = sum(inpatient==1),
-                     n_vis_out_only = sum(ed==0 & inpatient==0),
-                     n_vis_ed_only = sum(inpatient==0 & outpatient==0),
-                     n_vis_inpatient_only = sum(ed==0 & outpatient==0),
-                     n_vis_inpatient_out = sum(inpatient==1 & outpatient==1 & ed==0),
-                     n_vis_inpatient_ed = sum(inpatient==1 & outpatient==0 & ed==1),
-                     n_vis_ed_out = sum(inpatient==0 & outpatient==0 & ed==0),
-                     n_vis_all_3 = sum(inpatient==1 & outpatient==1 & ed==1),
                      dur = max(-(days_since_dx)))
 
   # for computing mean and median duration with the 0 visits
@@ -410,20 +375,6 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
                      median_n_vis_ed =median(n_vis_ed),    # median number of ed misses per patient
                      mean_n_vis_inpatient = mean(n_vis_inpatient),     # mean number of ed misses per patient
                      median_n_vis_inpatient = median(n_vis_inpatient),  # median number of ed misses per patient
-                     mean_n_vis_out_only = mean(n_vis_out_only),
-                     median_n_vis_out_only = median(n_vis_out_only),
-                     mean_n_vis_ed_only = mean(n_vis_ed_only),
-                     median_n_vis_ed_only = median(n_vis_ed_only),
-                     mean_n_vis_inpatient_only = mean(n_vis_inpatient_only),
-                     median_n_vis_inpatient_only = median(n_vis_inpatient_only),
-                     mean_n_vis_inpatient_out = mean(n_vis_inpatient_out),
-                     median_n_vis_inpatient_out = median(n_vis_inpatient_out),
-                     mean_n_vis_inpatient_ed = mean(n_vis_inpatient_ed),
-                     median_n_vis_inpatient_ed = median(n_vis_inpatient_ed),
-                     mean_n_vis_ed_out = mean(n_vis_ed_out),
-                     median_n_vis_ed_out = median(n_vis_ed_out),
-                     mean_n_vis_all_3 = mean(n_vis_all_3),
-                     median_n_vis_all_3 = median(n_vis_all_3),
                      min_dur = min(dur),           # min duration
                      mean_dur = mean(dur),         # mean miss duration
                      median_dur = median(dur),     # median miss duration
@@ -431,14 +382,7 @@ sim_miss_patients <- function(sim_data,new_draw_weight=0.0){
                      n_vis = sum(n_vis),
                      n_vis_out = sum(n_vis_out),
                      n_vis_ed = sum(n_vis_ed),
-                     n_vis_inpatient = sum(n_vis_inpatient),
-                     n_vis_out_only = sum(n_vis_out_only),
-                     n_vis_ed_only = sum(n_vis_ed_only),
-                     n_vis_inpatient_only = sum(n_vis_inpatient_only),
-                     n_vis_inpatient_out = sum(n_vis_inpatient_out),
-                     n_vis_inpatient_ed = sum(n_vis_inpatient_ed),
-                     n_vis_ed_out = sum(n_vis_ed_out),
-                     n_vis_all_3 = sum(n_vis_all_3)) %>%            # max miss duration
+                     n_vis_inpatient = sum(n_vis_inpatient)) %>%            # max miss duration
     dplyr::bind_cols(w0_stats)
 
 
