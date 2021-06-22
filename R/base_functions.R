@@ -17,3 +17,4 @@
 #usethis::use_package("changepoint")
 #usethis::use_package("forecast")
 #usethis::use_pipe()
+#usethis::use_package("forecast")
