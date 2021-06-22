@@ -30,8 +30,8 @@ linear regression method}
 
 \item{return_miss_only}{Logical argument to only return the tibbles of miss visit counts}
 
-\item{week_period}{Logical to incorporate a "day of the week" effect into the linear model, if
-method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation}
+\item{week_period}{Logical to incorporate a "day of the week" effect into the linear mode.
+Note this is only sensible for one-day period aggregation}
 
 \item{specify_cp}{Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)}

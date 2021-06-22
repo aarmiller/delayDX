@@ -206,7 +206,7 @@ fit_cp_lm_quad <- function(data,x,return_all=FALSE){
   return(out)
 }
 
-fit_cp_lm_cube <- function(data,x,return_all=FALSE){
+fit_cp_lm_cube <- function(data,x,return_all=FALSE,periodicity=FALSE){
 
   # shift time
   new_data <- data %>%
@@ -215,20 +215,56 @@ fit_cp_lm_cube <- function(data,x,return_all=FALSE){
                   shift2=shift^2*t2,
                   shift3=shift^3*t2)
 
+  if(periodicity){
+    new_data <- new_data  %>%
+    mutate(week_period = as.factor(t %% 7))
+    new_data <- within(new_data, week_period <- relevel(week_period, ref=1))
+  }
+
+  if(periodicity){
+    fit <- glm(Y~shift+shift2+shift3+week_period,data=new_data)
+  } else {
   fit <- glm(Y~shift+shift2+shift3,data=new_data)
+  }
   ilink <- family(fit)$linkinv
 
   if (return_all==TRUE){
 
-    preds <- new_data %>%
-      dplyr::select(period,Y,t,shift,shift2,shift3) %>%
+    if(periodicity){
+      preds <- new_data %>%
+      dplyr::select(period,Y,t,shift,shift2,shift3,week_period) %>%
+      dplyr::mutate(week_var=paste0("week_period",as.character(week_period)))
+
+    preds$week_coeff <- numeric(nrow(preds))
+
+    for(l in 1:nrow(preds)){
+      if(preds$week_var[l]=="week_period0"){
+        preds$week_coeff[l] <- 0
+      } else{
+        preds$week_coeff[l] <- fit$coefficients[[ preds$week_var[l] ]]
+      }
+    }
+
+    preds <- preds %>%
       modelr::add_predictions(fit) %>%
-      dplyr::mutate(pred1=fit$coefficients[1] + fit$coefficients[2]*shift,
+      dplyr::mutate(pred1=fit$coefficients[1] + fit$coefficients[2]*shift + week_coeff,
                     se_fit=predict(fit, type = "link", se.fit = TRUE)$se.fit,
                     pred_low=ilink(pred - (2*se_fit)),
                     pred_high=ilink(pred + (2*se_fit)),
                     pred=ilink(pred),
                     pred1=ilink(pred1))
+    } else{
+
+      preds <- new_data %>%
+        dplyr::select(period,Y,t,shift,shift2,shift3) %>%
+        modelr::add_predictions(fit) %>%
+        dplyr::mutate(pred1=fit$coefficients[1] + fit$coefficients[2]*shift,
+                      se_fit=predict(fit, type = "link", se.fit = TRUE)$se.fit,
+                      pred_low=ilink(pred - (2*se_fit)),
+                      pred_high=ilink(pred + (2*se_fit)),
+                      pred=ilink(pred),
+                      pred1=ilink(pred1))
+    }
 
     out <- list(fit=fit,
                 pred=preds,

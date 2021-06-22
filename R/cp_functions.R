@@ -187,7 +187,7 @@ find_cp_loss_fun <- function(data, var_name = "n_miss_visits", return_miss_only 
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
 #' @param auto_reg Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
-#' Will automatically fit periodicity, automatically setting week_period to TRUE
+#' If week_period is FALSE, will use a 7-day seasonality component. If week_period is TRUE, will use an additive indicator
 #' @return A list containing miss information, changepoint information, predictions,
 #' the model itself, and a plot of the middle finger curve and model.
 #' @examples
@@ -231,7 +231,49 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
   #Fit model, different if request periodicity or autoregressive
 
   if(auto_reg){
-    week_period <- TRUE
+    if(week_period){
+      #Convert to time series object
+      t_series <- ts(model_data$var_name,
+                     frequency = 7)
+      #See how far out we need to go in forecasting
+      h <- nrow(cp_out) - nrow(model_data)
+
+      #Set up covariates to use for prediction
+      pred_data <- cp_out %>% filter(period <= cp) %>% mutate(period_neg=-1*period) %>%
+        mutate(week_period = as.factor(period %% 7))
+
+      #Calculate xreg matrices by hand, as function can't handle factors
+      model_xreg <- model_data %>% mutate(num_period = period %% 7) %>%
+        mutate(day1 = as.numeric(num_period == 1)) %>%
+        mutate(day2 = as.numeric(num_period == 2)) %>%
+        mutate(day3 = as.numeric(num_period == 3)) %>%
+        mutate(day4 = as.numeric(num_period == 4)) %>%
+        mutate(day5 = as.numeric(num_period == 5)) %>%
+        mutate(day6 = as.numeric(num_period == 6)) %>%
+        mutate(trend = period_neg) %>%
+        select(day1,day2,day3,day4,day5,day6,trend) %>%
+        as.matrix()
+      pred_xreg <- pred_data %>% mutate(num_period = period %% 7) %>%
+        mutate(day1 = as.numeric(num_period == 1)) %>%
+        mutate(day2 = as.numeric(num_period == 2)) %>%
+        mutate(day3 = as.numeric(num_period == 3)) %>%
+        mutate(day4 = as.numeric(num_period == 4)) %>%
+        mutate(day5 = as.numeric(num_period == 5)) %>%
+        mutate(day6 = as.numeric(num_period == 6)) %>%
+        mutate(trend = period_neg) %>%
+        select(day1,day2,day3,day4,day5,day6,trend) %>%
+        as.matrix()
+
+      #Fit Arima model with additive effect for week
+      model <- Arima(t_series, c(1,0,1), xreg=model_xreg, method = "ML")
+      #Get forecast
+      pred <- forecast(model, h=h, level = .9, xreg = pred_xreg)
+      pred_mean <- c(pred$fitted,pred$mean)
+      pred_upper <- c(fitted(model) + 1.96*sqrt(model$sigma2),pred$upper)
+      pred_lower <- c(fitted(model) - 1.96*sqrt(model$sigma2),pred$lower)
+
+
+    } else{
     #Convert to time series object
     t_series <- ts(model_data$var_name,
                    frequency = 7)
@@ -239,12 +281,13 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
     h <- nrow(cp_out) - nrow(model_data)
 
     #Fit Arima model
-    model <- Arima(t_series, c(1,1,1), seasonal = list(order = c(1,1,1)))
+    model <- Arima(t_series, c(1,0,1), seasonal = list(order = c(1,0,0)), method = "ML")
     #Get forecast
     pred <- forecast(model, h=h, level = .9)
-    pred_mean <- c(pred$x,pred$mean)
-    pred_upper <- c(pred$x,pred$upper)
-    pred_lower <- c(pred$x,pred$lower)
+    pred_mean <- c(pred$fitted,pred$mean)
+    pred_upper <- c(fitted(model) + 1.96*sqrt(model$sigma2),pred$upper)
+    pred_lower <- c(fitted(model) - 1.96*sqrt(model$sigma2),pred$lower)
+    }
 
 
 
@@ -359,7 +402,7 @@ find_cp_pettitt <- function(data, var_name = "n_miss_visits", return_miss_only =
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
 #' @param auto_reg Logical that determines whether expected counts use a time-series framework that incorporates autoregression.
-#' Will automatically fit periodicity, automatically setting week_period to TRUE
+#' If week_period is FALSE, will use a 7-day seasonality component. If week_period is TRUE, will use an additive indicator
 #' @return A list containing miss information, changepoint information, predictions,
 #' the model itself, and a plot of the middle finger curve and model.
 #' @examples
@@ -399,10 +442,54 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
   model_data <- cp_out %>% filter(period > cp) %>% mutate(period_neg=-1*period) %>%
     mutate(week_period = as.factor(period %% 7))
 
+
   #Fit model, different if request periodicity or autoregressive
 
   if(auto_reg){
-      week_period <- TRUE
+    if(week_period){
+      #Convert to time series object
+      t_series <- ts(model_data$var_name,
+                     frequency = 7)
+      #See how far out we need to go in forecasting
+      h <- nrow(cp_out) - nrow(model_data)
+
+      #Set up covariates to use for prediction
+      pred_data <- cp_out %>% filter(period <= cp) %>% mutate(period_neg=-1*period) %>%
+        mutate(week_period = as.factor(period %% 7))
+
+      #Calculate xreg matrices by hand, as function can't handle factors
+      model_xreg <- model_data %>% mutate(num_period = period %% 7) %>%
+        mutate(day1 = as.numeric(num_period == 1)) %>%
+        mutate(day2 = as.numeric(num_period == 2)) %>%
+        mutate(day3 = as.numeric(num_period == 3)) %>%
+        mutate(day4 = as.numeric(num_period == 4)) %>%
+        mutate(day5 = as.numeric(num_period == 5)) %>%
+        mutate(day6 = as.numeric(num_period == 6)) %>%
+        mutate(trend = period_neg) %>%
+        select(day1,day2,day3,day4,day5,day6,trend) %>%
+        as.matrix()
+      pred_xreg <- pred_data %>% mutate(num_period = period %% 7) %>%
+        mutate(day1 = as.numeric(num_period == 1)) %>%
+        mutate(day2 = as.numeric(num_period == 2)) %>%
+        mutate(day3 = as.numeric(num_period == 3)) %>%
+        mutate(day4 = as.numeric(num_period == 4)) %>%
+        mutate(day5 = as.numeric(num_period == 5)) %>%
+        mutate(day6 = as.numeric(num_period == 6)) %>%
+        mutate(trend = period_neg) %>%
+        select(day1,day2,day3,day4,day5,day6,trend) %>%
+        as.matrix()
+
+      #Fit Arima model with additive effect for week
+      model <- Arima(t_series, c(1,0,1), xreg=model_xreg, method = "ML")
+      #Get forecast
+      pred <- forecast(model, h=h, level = .9, xreg = pred_xreg)
+      pred_mean <- c(pred$fitted,pred$mean)
+      pred_upper <- c(fitted(model) + 1.96*sqrt(model$sigma2),pred$upper)
+      pred_lower <- c(fitted(model) - 1.96*sqrt(model$sigma2),pred$lower)
+
+
+    } else{
+
       #Convert to time series object
       t_series <- ts(model_data$var_name, #start = min(-1*model_data$period),
                      frequency = 7)
@@ -410,12 +497,13 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
       h <- nrow(cp_out) - nrow(model_data)
 
       #Fit Arima model
-      model <- Arima(t_series, c(1,1,1), seasonal = list(order = c(1,1,1)))
+      model <- Arima(t_series, c(1,0,1), seasonal = list(order = c(1,0,0)), method = "ML")
       #Get forecast
       pred <- forecast(model, h=h, level = .9)
-      pred_mean <- c(pred$x,pred$mean)
-      pred_upper <- c(pred$x,pred$upper)
-      pred_lower <- c(pred$x,pred$lower)
+      pred_mean <- c(pred$fitted,pred$mean)
+      pred_upper <- c(fitted(model) + 1.96*sqrt(model$sigma2),pred$upper)
+      pred_lower <- c(fitted(model) - 1.96*sqrt(model$sigma2),pred$lower)
+    }
 
 
 
@@ -523,6 +611,8 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
 #' @param return_miss_only Logical argument to only return the tibbles of miss visit counts
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
+#' @param week_period Logical to incorporate a "day of the week" effect into
+#' the linear model. Note this is only sensible for one-day period aggregation.
 #' @examples
 #' cp_result_original <- final_time_map %>%
 #' count_prior_events_truven(event_name = "any_ssd", start_day = 1, by_days = 1) %>%
@@ -530,7 +620,7 @@ find_cp_cusum <- function(data, var_name = "n_miss_visits", return_miss_only = F
 #'
 #' @export
 find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criteria="AIC", return_miss_only=FALSE,
-                           specify_cp = NULL){
+                           specify_cp = NULL, week_period=FALSE){
 
   data$var_name <- data[[var_name]]
 
@@ -555,7 +645,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
 
     if (method=="lm_cube"){
       fits = tibble::tibble(cp=2:max(data$t)) %>%
-        dplyr::mutate(res=purrr::map(cp, ~fit_cp_lm_cube(data = data, x=.) )) %>%
+        dplyr::mutate(res=purrr::map(cp, ~fit_cp_lm_cube(data = data, x=., periodicity=week_period) )) %>%
         tidyr::unnest(res)
     }
 
@@ -600,7 +690,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
     }
 
     if (method=="lm_cube"){
-      fits = fit_cp_lm_cube(data = data, x=change_t)
+      fits = fit_cp_lm_cube(data = data, x=change_t, periodicity=week_period)
     }
 
     if (method=="cube"){
@@ -641,7 +731,7 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
   }
 
   if (method=="lm_cube"){
-    out <- fit_cp_lm_cube(data = data, x=change_t,return_all = TRUE)
+    out <- fit_cp_lm_cube(data = data, x=change_t,return_all = TRUE, periodicity=week_period)
   }
 
   if (method=="exp"){
@@ -701,8 +791,8 @@ find_cp_linreg <- function(data,var_name="n_miss_visits",method="lm",eval_criter
 #' "MSE", "RMSE", "MAE", "MSLE", "RMSLE"
 #' @param eval_criteria The evaluation criteria used to find change points, if using a
 #' linear regression method
-#' @param week_period Logical to incorporate a "day of the week" effect into the linear model, if
-#' method is "pettitt" of "cusum". Note this is only sensible for one-day period aggregation
+#' @param week_period Logical to incorporate a "day of the week" effect into the linear mode.
+#' Note this is only sensible for one-day period aggregation
 #' @param return_miss_only Logical argument to only return the tibbles of miss visit counts
 #' @param specify_cp Set a specific change point you want to use instead of searching for optimal change point. Enter a postive integer value
 #' repersenting the days before the index on which you you want to specify the change point. (e.g. 100 would be 100 days before the index)
@@ -725,7 +815,7 @@ find_change_point <- function(data,var_name="n_miss_visits",method,eval_criteria
   if(method %in% c("lm","lm_quad","lm_cube", "quad", "cube", "exp", "spline")){
     output <- find_cp_linreg(data, var_name=var_name,method=method,eval_criteria = eval_criteria,
                              return_miss_only = return_miss_only,
-                             specify_cp = specify_cp)
+                             specify_cp = specify_cp, week_period=week_period)
     return(output)
   } else if(method=="pettitt"){
     output <- find_cp_pettitt(data, var_name=var_name, return_miss_only = return_miss_only,
