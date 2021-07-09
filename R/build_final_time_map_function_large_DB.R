@@ -29,7 +29,7 @@ build_final_time_map_large_DB <- function (condition_short_name, duration_prior_
     select(-days_since_index, - index_date)
 
     # Get subset of enrolids that will be used in the analysis
-    final_cohort <- read_rds(path= cohort_path)
+    final_cohort <- read_rds(cohort_path)
 
     index_data <- final_cohort %>%
       mutate(time_before_index = index_date - first_enroll) %>%
